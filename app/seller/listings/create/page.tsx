@@ -101,9 +101,9 @@ export default function CreateListingPage() {
   };
 
   return (
-    <div className="w-full flex-1 bg-[#FBF9F8] text-[#1B1C1C] min-h-screen pb-20">
+    <div className="w-full flex-1 bg-[#FBF9F8] text-[#1B1C1C] min-h-screen pb-24">
       {/* Main Form Body */}
-      <main className="pt-4 px-4 sm:px-6 max-w-xl mx-auto space-y-6">
+      <main className="pt-4 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Hidden Inputs for File & Camera */}
           <input

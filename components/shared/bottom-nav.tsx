@@ -11,7 +11,12 @@ export function BottomNav() {
   const pathname = usePathname();
   const { totalItems } = useCart();
 
-  const isMainScreen = pathname === "/" || pathname === "/shop";
+  const isMainScreen =
+    pathname === "/" ||
+    pathname === "/shop" ||
+    pathname.startsWith("/wishlist") ||
+    pathname.startsWith("/orders") ||
+    pathname.startsWith("/profile");
 
   if (!isLoaded || !isSignedIn || !isMainScreen) {
     return null;
@@ -33,7 +38,7 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl z-[100] bg-[#FBF9F8]/95 backdrop-blur-xl border-t border-[#E4E2E1] grid grid-cols-5 items-center h-16 pb-safe px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] pointer-events-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-[#FBF9F8]/95 backdrop-blur-xl border-t border-[#E4E2E1] grid grid-cols-5 items-center h-16 pb-safe px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] md:hidden pointer-events-auto">
       {navItems.map((item) => {
         const isActive =
           pathname === item.href ||

@@ -65,14 +65,14 @@ export default function AllCategoriesPage() {
         </h1>
       </header>
 
-      <main className="p-4 sm:p-6 max-w-5xl mx-auto space-y-6">
+      <main className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
         <div className="text-center space-y-1 my-2">
           <p className="text-xs text-[#46483C] max-w-xs mx-auto font-medium">
             Explore curated local collections for pre-loved and new items.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
           {CATEGORIES.map((cat) => {
             const items = searchListings("", cat.slug);
             const countStr = `${items.length} ${items.length === 1 ? "item" : "items"} near you`;

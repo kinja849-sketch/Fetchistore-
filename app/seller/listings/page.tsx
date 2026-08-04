@@ -15,7 +15,7 @@ export default function ActiveListingsPage() {
   });
 
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-32 space-y-8 bg-[#FBF9F8]">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-32 space-y-8 bg-[#FBF9F8]">
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#E4E2E1] pb-4">
         <div className="flex items-center space-x-4">
@@ -66,7 +66,7 @@ export default function ActiveListingsPage() {
           No active seller listings found. Click &quot;Post New Item&quot; to add your first product!
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredListings.map((item) => (
             <div
               key={item.id}

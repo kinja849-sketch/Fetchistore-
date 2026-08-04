@@ -27,7 +27,7 @@ export default function WishlistPage() {
   };
 
   return (
-    <div className="w-full flex-1 p-4 space-y-4 bg-[#FBF9F8]">
+    <div className="w-full flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 bg-[#FBF9F8]">
       <div className="flex justify-between items-end border-b border-[#E4E2E1] pb-3">
         <div>
           <h1 className="text-2xl font-extrabold text-[#56642B] tracking-tight">
@@ -64,21 +64,21 @@ export default function WishlistPage() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {wishlistItems.map((item) => (
             <div
               key={item.id}
-              className="bg-[#F6F3F2] rounded-3xl p-3 flex gap-3 relative border border-[#E4E2E1]/60 shadow-2xs group"
+              className="bg-[#F6F3F2] rounded-3xl p-3 flex gap-3 relative border border-[#E4E2E1]/60 shadow-2xs group flex-col justify-between"
             >
               <button
                 onClick={() => removeFromWishlist(item.id)}
-                className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/80 text-[#76786B] hover:text-[#ba1a1a] hover:bg-white flex items-center justify-center shadow-xs cursor-pointer transition-colors"
+                className="absolute top-4 right-4 z-10 w-7 h-7 rounded-full bg-white/80 text-[#76786B] hover:text-[#ba1a1a] hover:bg-white flex items-center justify-center shadow-xs cursor-pointer transition-colors"
                 aria-label="Remove item"
               >
                 <span className="material-symbols-outlined text-[16px]">close</span>
               </button>
 
-              <div className="w-24 h-24 rounded-2xl overflow-hidden bg-[#E4E2E1] flex-shrink-0">
+              <div className="w-full aspect-square rounded-2xl overflow-hidden bg-[#E4E2E1]">
                 <img
                   src={item.imageUrl}
                   alt={item.title}
@@ -86,9 +86,9 @@ export default function WishlistPage() {
                 />
               </div>
 
-              <div className="flex-1 flex flex-col justify-between pr-6">
+              <div className="flex-1 flex flex-col justify-between pt-1">
                 <div>
-                  <h3 className="text-xs font-bold text-[#1B1C1C] line-clamp-1">
+                  <h3 className="text-xs sm:text-sm font-bold text-[#1B1C1C] line-clamp-1">
                     {item.title}
                   </h3>
                   <p className="text-[10px] text-[#76786B] line-clamp-1">
@@ -101,7 +101,7 @@ export default function WishlistPage() {
 
                 <button
                   onClick={() => handleMoveToCart(item)}
-                  className="w-full mt-2 bg-[#8A9A5B] text-[#161F00] text-xs font-bold py-1.5 px-3 rounded-full hover:bg-[#D9EAA3] transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-98"
+                  className="w-full mt-3 bg-[#8A9A5B] text-[#161F00] text-xs font-bold py-2 px-3 rounded-full hover:bg-[#D9EAA3] transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-98"
                 >
                   <span className="material-symbols-outlined text-[14px]">
                     add_shopping_cart

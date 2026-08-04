@@ -35,15 +35,15 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         />
       </head>
-      <body className="min-h-full bg-[#EFECE8] text-[#1B1C1C] font-sans antialiased flex flex-col justify-center items-center">
+      <body className="min-h-full bg-[#FBF9F8] text-[#1B1C1C] font-sans antialiased flex flex-col">
         <ClerkProvider>
           <AuthProvider>
             <ListingsProvider>
               <WishlistProvider>
                 <CartProvider>
-                  <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto min-h-screen bg-[#FBF9F8] shadow-2xl relative flex flex-col overflow-[#E4E2E1]/50">
+                  <div className="w-full max-w-7xl mx-auto min-h-screen bg-[#FBF9F8] relative flex flex-col shadow-xs">
                     <Navbar />
-                    <main className="flex-1 w-full flex flex-col pb-20">{children}</main>
+                    <main className="flex-1 w-full flex flex-col pb-20 md:pb-8">{children}</main>
                     <BottomNav />
                   </div>
                 </CartProvider>

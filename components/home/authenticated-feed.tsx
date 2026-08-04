@@ -121,7 +121,7 @@ export default function AuthenticatedFeed() {
   });
 
   return (
-    <div className="w-full flex-1 flex flex-col space-y-5 p-4 bg-[#FBF9F8]">
+    <div className="w-full flex-1 flex flex-col space-y-6 p-4 sm:p-6 lg:p-8 bg-[#FBF9F8]">
       {/* Search & Filter Bar */}
       <div className="relative w-full">
         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#76786B]">
@@ -208,7 +208,7 @@ export default function AuthenticatedFeed() {
             <Link
               key={banner.id}
               href={banner.link}
-              className="snap-center shrink-0 w-[80vw] sm:w-[320px] h-40 relative rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-shadow group/card"
+              className="snap-center shrink-0 w-[80vw] sm:w-[320px] md:w-[360px] h-40 relative rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-shadow group/card"
             >
               <div
                 className="absolute inset-0 bg-cover bg-center w-full h-full group-hover/card:scale-105 transition-transform duration-500"
@@ -229,7 +229,7 @@ export default function AuthenticatedFeed() {
       </section>
 
       {/* Category Navigation Pills */}
-      <section className="flex justify-between items-start pt-1">
+      <section className="flex items-center justify-between sm:justify-start sm:gap-8 pt-1 overflow-x-auto scrollbar-hide pb-1">
         {[
           { name: "All", slug: "all", icon: "apps" },
           { name: "Fashion", slug: "fashion", icon: "checkroom" },
@@ -242,7 +242,7 @@ export default function AuthenticatedFeed() {
             <button
               key={cat.name}
               onClick={() => setSelectedCategory(cat.slug)}
-              className="flex flex-col items-center gap-1.5 group cursor-pointer"
+              className="flex flex-col items-center gap-1.5 group cursor-pointer shrink-0"
             >
               <div
                 className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
@@ -282,7 +282,7 @@ export default function AuthenticatedFeed() {
             No items found matching your filter criteria. Try searching or expanding distance.
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
             {filteredProducts.map((product) => (
               <Link
                 key={product.id}

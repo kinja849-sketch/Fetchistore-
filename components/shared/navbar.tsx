@@ -67,23 +67,75 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-[#FBF9F8]/95 backdrop-blur-md border-b border-[#E4E2E1]/60 px-4 py-3 flex items-center justify-between">
-      <div className="flex items-center space-x-2">
+    <header className="sticky top-0 z-50 bg-[#FBF9F8]/95 backdrop-blur-md border-b border-[#E4E2E1]/60 px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+      <div className="flex items-center space-x-8">
         <Link href="/" className="flex items-center gap-1.5 text-[#56642B] group">
           <span className="material-symbols-outlined text-[26px]">storefront</span>
           <span className="text-lg font-black tracking-wider text-[#56642B]">
             FETCHISTORE
           </span>
         </Link>
+
+        {/* Desktop Quick Nav Links */}
+        <nav className="hidden md:flex items-center space-x-6 text-xs font-extrabold uppercase tracking-wider">
+          <Link
+            href="/"
+            className={`transition-colors ${
+              pathname === "/" ? "text-[#56642B]" : "text-[#76786B] hover:text-[#1B1C1C]"
+            }`}
+          >
+            Discover
+          </Link>
+          <Link
+            href="/shop"
+            className={`transition-colors ${
+              pathname === "/shop" ? "text-[#56642B]" : "text-[#76786B] hover:text-[#1B1C1C]"
+            }`}
+          >
+            Shop
+          </Link>
+          <Link
+            href="/wishlist"
+            className={`transition-colors ${
+              pathname === "/wishlist" ? "text-[#56642B]" : "text-[#76786B] hover:text-[#1B1C1C]"
+            }`}
+          >
+            Wishlist
+          </Link>
+          <Link
+            href="/orders"
+            className={`transition-colors ${
+              pathname.startsWith("/orders") ? "text-[#56642B]" : "text-[#76786B] hover:text-[#1B1C1C]"
+            }`}
+          >
+            Orders
+          </Link>
+          <Link
+            href="/profile"
+            className={`transition-colors ${
+              pathname.startsWith("/profile") ? "text-[#56642B]" : "text-[#76786B] hover:text-[#1B1C1C]"
+            }`}
+          >
+            Profile
+          </Link>
+        </nav>
       </div>
 
-      <div className="flex items-center space-x-2">
-        <div className="flex items-center gap-1 px-2.5 py-1 bg-[#F0EDED] rounded-full text-xs font-semibold text-[#46483C]">
+      <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-1 px-3 py-1 bg-[#F0EDED] rounded-full text-xs font-semibold text-[#46483C]">
           <span className="material-symbols-outlined text-[14px] text-[#56642B]">
             location_on
           </span>
           <span>Near You</span>
         </div>
+
+        <Link
+          href="/cart"
+          className="hidden md:flex items-center justify-center w-8 h-8 rounded-full bg-[#F0EDED] text-[#1B1C1C] hover:bg-[#E4E2E1] transition-colors relative"
+          aria-label="Cart"
+        >
+          <span className="material-symbols-outlined text-[18px]">local_mall</span>
+        </Link>
 
         <Link
           href="/notifications"

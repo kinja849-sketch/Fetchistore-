@@ -270,7 +270,7 @@ export default function ProfilePage() {
 
   // Main Profile View
   return (
-    <div className="w-full flex-1 p-4 space-y-5 bg-[#FBF9F8] relative">
+    <div className="w-full flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6 bg-[#FBF9F8] relative">
       {/* Toast Notification */}
       {showSuccessToast && (
         <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[110] bg-[#56642B] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
@@ -336,7 +336,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Bento Sections */}
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Selling Bento */}
         <div className="bg-[#F6F3F2] p-4 rounded-3xl border border-[#E4E2E1] space-y-2">
           <div className="flex items-center gap-3">

@@ -118,102 +118,133 @@ export default function ProductDetailPage() {
       </header>
 
       {/* Main Container */}
-      <main className="p-4 sm:p-6 max-w-xl mx-auto space-y-4 w-full flex-1">
-        {/* Image Gallery */}
-        <div className="w-full aspect-square rounded-3xl overflow-hidden bg-[#E4E2E1] relative shadow-xs">
-          <img
-            src={product.images[selectedImage] || product.images[0]}
-            alt={product.title}
-            className="w-full h-full object-cover transition-all duration-500"
-          />
-          <div className="absolute top-3 left-3 flex gap-1.5 items-center">
-            <ConditionBadge condition={product.condition} />
-            <span className="text-[10px] font-extrabold bg-[#56642B] text-white px-2.5 py-1 rounded-full shadow-xs">
-              {product.distance}
-            </span>
-          </div>
-        </div>
+      <main className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto w-full flex-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-start">
+          {/* Left Column: Image Gallery & Thumbnails */}
+          <div className="space-y-4">
+            <div className="w-full aspect-square rounded-3xl overflow-hidden bg-[#E4E2E1] relative shadow-xs">
+              <img
+                src={product.images[selectedImage] || product.images[0]}
+                alt={product.title}
+                className="w-full h-full object-cover transition-all duration-500"
+              />
+              <div className="absolute top-3 left-3 flex gap-1.5 items-center">
+                <ConditionBadge condition={product.condition} />
+                <span className="text-[10px] font-extrabold bg-[#56642B] text-white px-2.5 py-1 rounded-full shadow-xs">
+                  {product.distance}
+                </span>
+              </div>
+            </div>
 
-        {/* Thumbnail Selector Row */}
-        {product.images.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto scrollbar-none py-1">
-            {product.images.map((img, idx) => (
+            {/* Thumbnail Selector Row */}
+            {product.images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto scrollbar-none py-1">
+                {product.images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImage(idx)}
+                    className={`w-14 h-14 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 cursor-pointer ${
+                      selectedImage === idx ? "border-[#56642B] scale-95" : "border-transparent opacity-60"
+                    }`}
+                  >
+                    <img src={img} alt="Thumbnail" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Product Details & Purchase Actions */}
+          <div className="space-y-5">
+            <div className="flex justify-between items-start gap-4">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-[#1B1C1C]">
+                {product.title}
+              </h1>
+              <span className="text-2xl font-black text-[#56642B] whitespace-nowrap">
+                ${product.price.toFixed(2)}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs text-[#76786B]">
+              <div className="flex text-[#7D562D]">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} size={14} className="fill-[#7D562D]" />
+                ))}
+              </div>
+              <span className="font-bold text-[#1B1C1C]">{product.rating}</span>
+              <span>({product.reviewsCount} reviews)</span>
+            </div>
+
+            <p className="text-xs sm:text-sm text-[#46483C] leading-relaxed">
+              {product.description}
+            </p>
+
+            {/* Eco / Sustainability Tags */}
+            <div className="flex gap-2 pt-1 flex-wrap">
+              <span className="text-[10px] font-extrabold bg-[#8A9A5B]/15 text-[#56642B] px-3 py-1 rounded-full flex items-center gap-1">
+                🌱 Sustainable Choice
+              </span>
+              <span className="text-[10px] font-extrabold bg-[#FFCA98]/40 text-[#7D562D] px-3 py-1 rounded-full flex items-center gap-1">
+                🏠 Seller Door Delivery
+              </span>
+            </div>
+
+            {/* Seller Card */}
+            <div className="bg-[#F6F3F2] p-4 rounded-2xl border border-[#E4E2E1] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#8A9A5B] text-white flex items-center justify-center font-bold text-sm">
+                  {product.sellerName.substring(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <h4 className="text-xs font-extrabold text-[#1B1C1C]">
+                    {product.sellerName}
+                  </h4>
+                  <p className="text-[10px] text-[#76786B]">
+                    {product.sellerLocation} • ★ {product.sellerRating}
+                  </p>
+                </div>
+              </div>
               <button
-                key={idx}
-                onClick={() => setSelectedImage(idx)}
-                className={`w-14 h-14 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 cursor-pointer ${
-                  selectedImage === idx ? "border-[#56642B] scale-95" : "border-transparent opacity-60"
-                }`}
+                onClick={() => router.push("/orders/1/chat")}
+                className="text-xs font-extrabold text-[#56642B] bg-[#8A9A5B]/20 hover:bg-[#8A9A5B]/30 px-3.5 py-1.5 rounded-full flex items-center gap-1 cursor-pointer"
               >
-                <img src={img} alt="Thumbnail" className="w-full h-full object-cover" />
+                <MessageCircle size={14} />
+                Chat
               </button>
-            ))}
-          </div>
-        )}
-
-        {/* Product Details Section */}
-        <div className="space-y-3 pt-2">
-          <div className="flex justify-between items-start gap-2">
-            <h1 className="text-xl font-extrabold text-[#1B1C1C]">
-              {product.title}
-            </h1>
-            <span className="text-xl font-black text-[#56642B] whitespace-nowrap">
-              ${product.price.toFixed(2)}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-[#76786B]">
-            <div className="flex text-[#7D562D]">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} size={14} className="fill-[#7D562D]" />
-              ))}
             </div>
-            <span className="font-bold text-[#1B1C1C]">{product.rating}</span>
-            <span>({product.reviewsCount} reviews)</span>
-          </div>
 
-          <p className="text-xs sm:text-sm text-[#46483C] leading-relaxed">
-            {product.description}
-          </p>
-
-          {/* Eco / Sustainability Tags */}
-          <div className="flex gap-2 pt-1 flex-wrap">
-            <span className="text-[10px] font-extrabold bg-[#8A9A5B]/15 text-[#56642B] px-3 py-1 rounded-full flex items-center gap-1">
-              🌱 Sustainable Choice
-            </span>
-            <span className="text-[10px] font-extrabold bg-[#FFCA98]/40 text-[#7D562D] px-3 py-1 rounded-full flex items-center gap-1">
-              🏠 Seller Door Delivery
-            </span>
-          </div>
-
-          {/* Seller Card */}
-          <div className="bg-[#F6F3F2] p-3.5 rounded-2xl border border-[#E4E2E1] flex items-center justify-between mt-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#8A9A5B] text-white flex items-center justify-center font-bold text-sm">
-                {product.sellerName.substring(0, 2).toUpperCase()}
+            {/* Desktop Purchase Action Bar */}
+            <div className="hidden md:flex items-center gap-4 pt-4 border-t border-[#E4E2E1]">
+              <div className="flex items-center bg-[#F0EDED] rounded-full px-3 py-1.5">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="w-7 h-7 flex items-center justify-center font-bold text-[#1B1C1C] cursor-pointer"
+                >
+                  -
+                </button>
+                <span className="w-8 text-center text-xs font-extrabold">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="w-7 h-7 flex items-center justify-center font-bold text-[#1B1C1C] cursor-pointer"
+                >
+                  +
+                </button>
               </div>
-              <div>
-                <h4 className="text-xs font-extrabold text-[#1B1C1C]">
-                  {product.sellerName}
-                </h4>
-                <p className="text-[10px] text-[#76786B]">
-                  {product.sellerLocation} • ★ {product.sellerRating}
-                </p>
-              </div>
+
+              <button
+                onClick={handleAddToCart}
+                className="flex-1 bg-[#56642B] text-white font-extrabold py-3.5 px-6 rounded-full hover:bg-[#253000] transition-all flex items-center justify-center gap-2 shadow-sm active:scale-98 cursor-pointer text-sm"
+              >
+                <ShoppingBag size={18} />
+                <span>{addedNotice ? "Added to Cart ✓" : `Add to Cart • $${(product.price * quantity).toFixed(2)}`}</span>
+              </button>
             </div>
-            <button
-              onClick={() => router.push("/orders/1/chat")}
-              className="text-xs font-extrabold text-[#56642B] bg-[#8A9A5B]/20 hover:bg-[#8A9A5B]/30 px-3 py-1.5 rounded-full flex items-center gap-1 cursor-pointer"
-            >
-              <MessageCircle size={14} />
-              Chat
-            </button>
           </div>
         </div>
       </main>
 
-      {/* Sticky Bottom Add to Cart Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#FBF9F8]/95 backdrop-blur-xl border-t border-[#E4E2E1] p-3 z-50 flex items-center justify-center shadow-lg">
+      {/* Mobile Sticky Bottom Add to Cart Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-[#FBF9F8]/95 backdrop-blur-xl border-t border-[#E4E2E1] p-3 z-50 flex items-center justify-center shadow-lg md:hidden">
         <div className="w-full max-w-xl flex items-center justify-between gap-3">
           <div className="flex items-center bg-[#F0EDED] rounded-full px-3 py-1">
             <button
