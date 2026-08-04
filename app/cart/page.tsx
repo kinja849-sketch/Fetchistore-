@@ -1,164 +1,200 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShieldCheck, MapPin } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
-import { ConditionBadge } from "@/components/shared/condition-badge";
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, subtotal, deliveryFee, totalPrice } = useCart();
+  const router = useRouter();
+  const { items, updateQuantity, removeItem, subtotal, clearCart } = useCart();
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "cod" | "bank">("stripe");
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  if (items.length === 0) {
-    return (
-      <main className="max-w-4xl mx-auto px-4 py-16 text-center space-y-6">
-        <div className="w-20 h-20 bg-brand-light text-brand rounded-full flex items-center justify-center mx-auto shadow-sm">
-          <ShoppingBag size={36} />
-        </div>
-        <div className="space-y-2">
-          <h1 className="text-2xl font-black text-gray-900">Your Cart is Empty</h1>
-          <p className="text-sm text-gray-500 max-w-sm mx-auto">
-            Discover pre-loved and new items nearby with seller door delivery.
-          </p>
-        </div>
-        <div>
-          <Link
-            href="/shop"
-            className="inline-flex items-center space-x-2 bg-brand text-white px-7 py-3.5 rounded-full text-sm font-extrabold shadow-lg shadow-brand/25 hover:bg-brand-dark transition-all active:scale-95"
-          >
-            <span>Start Shopping</span>
-            <ArrowRight size={18} />
-          </Link>
-        </div>
-      </main>
-    );
-  }
+  const deliveryFee = items.length > 0 ? 4.5 : 0;
+  const grandTotal = subtotal + deliveryFee;
+
+  const handleCheckout = () => {
+    setIsProcessing(true);
+    setTimeout(() => {
+      clearCart();
+      router.push("/orders");
+    }, 1200);
+  };
 
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28 space-y-8">
-      
-      <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-            Shopping Cart
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-500 font-medium">
-            Review your selected items before proceeding to seller door checkout.
-          </p>
+    <div className="w-full flex-1 bg-[#FBF9F8] text-[#1B1C1C] min-h-screen pb-28">
+      {/* Sticky Top Header Bar with Back Button */}
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#FBF9F8]/90 border-b border-[#E4E2E1]/60 h-16 flex items-center justify-between px-4 sm:px-6 transition-all duration-300">
+        <button
+          onClick={() => router.back()}
+          aria-label="Go back"
+          className="flex items-center justify-center p-2 rounded-full hover:bg-[#E4E2E1]/50 active:scale-95 transition-all text-[#56642B] cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-2xl">arrow_back</span>
+        </button>
+        <h1 className="text-lg font-extrabold text-[#56642B] tracking-tight flex-1 text-center pr-8">
+          Your Shopping Cart
+        </h1>
+        {items.length > 0 && (
+          <button
+            onClick={clearCart}
+            className="text-xs font-bold text-[#ba1a1a] hover:underline"
+          >
+            Clear
+          </button>
+        )}
+      </header>
+
+      <main className="p-4 sm:p-6 max-w-xl mx-auto space-y-4">
+
+      {items.length === 0 ? (
+        <div className="py-16 text-center space-y-3">
+          <span className="material-symbols-outlined text-[48px] text-[#76786B]">
+            local_mall
+          </span>
+          <p className="text-sm font-bold text-[#1B1C1C]">Your cart is empty</p>
+          <Link
+            href="/"
+            className="inline-block bg-[#8A9A5B] text-[#161F00] text-xs font-extrabold px-5 py-2.5 rounded-full hover:bg-[#D9EAA3] transition-all"
+          >
+            Start Shopping
+          </Link>
         </div>
-        <span className="text-xs font-bold bg-brand-light text-brand px-3.5 py-1.5 rounded-full">
-          {items.length} {items.length === 1 ? "Item" : "Items"}
-        </span>
-      </div>
+      ) : (
+        <>
+          {/* Cart Item List */}
+          <div className="space-y-3">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="bg-[#F6F3F2] rounded-3xl p-3 flex gap-3 items-center border border-[#E4E2E1]/60"
+              >
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="w-16 h-16 rounded-2xl object-cover bg-[#E4E2E1] flex-shrink-0"
+                />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Cart Items List (7 cols) */}
-        <div className="lg:col-span-7 space-y-4">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white border border-gray-100 rounded-3xl p-4 sm:p-5 flex items-center space-x-4 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
-                <Image src={item.image} alt={item.title} fill className="object-cover" />
-              </div>
-
-              <div className="flex-1 space-y-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <ConditionBadge condition={item.condition} />
-                  {item.distance && (
-                    <span className="text-[10px] text-gray-400 font-semibold">{item.distance}</span>
-                  )}
-                </div>
-
-                <h3 className="text-sm font-extrabold text-gray-900 truncate">
-                  {item.title}
-                </h3>
-
-                <div className="text-sm font-black text-brand">
-                  ${item.price.toFixed(2)}
-                </div>
-
-                {/* Quantity Controls */}
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center space-x-2 bg-gray-100/80 rounded-full px-2 py-1">
+                <div className="flex-1 flex flex-col justify-between">
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-xs font-bold text-[#1B1C1C] line-clamp-1">
+                      {item.title}
+                    </h3>
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="p-1 text-gray-600 hover:text-brand transition-colors cursor-pointer"
-                      aria-label="Decrease quantity"
+                      onClick={() => removeItem(item.id)}
+                      className="text-[#76786B] hover:text-[#ba1a1a] p-1"
                     >
-                      <Minus size={14} />
-                    </button>
-                    <span className="text-xs font-extrabold text-gray-900 w-5 text-center">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="p-1 text-gray-600 hover:text-brand transition-colors cursor-pointer"
-                      aria-label="Increase quantity"
-                    >
-                      <Plus size={14} />
+                      <span className="material-symbols-outlined text-[16px]">close</span>
                     </button>
                   </div>
 
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    className="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-                    aria-label="Remove item"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="text-xs font-extrabold text-[#56642B]">
+                      ${(item.price * item.quantity).toFixed(2)}
+                    </span>
+
+                    <div className="flex items-center bg-white rounded-full px-2 py-0.5 border border-[#E4E2E1] text-xs">
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        className="px-1.5 font-bold text-[#76786B]"
+                      >
+                        -
+                      </button>
+                      <span className="px-2 font-extrabold">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        className="px-1.5 font-bold text-[#76786B]"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+
+          {/* Delivery Address Card */}
+          <div className="bg-[#F6F3F2] p-4 rounded-3xl border border-[#E4E2E1] space-y-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#56642B]">
+              <span className="material-symbols-outlined text-[18px]">local_shipping</span>
+              <span>Seller-to-Door Delivery</span>
             </div>
-          ))}
-        </div>
-
-        {/* Order Summary & Checkout CTA (5 cols) */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="bg-gray-50 border border-gray-100 rounded-3xl p-6 space-y-6 shadow-sm">
-            <h2 className="text-lg font-extrabold text-gray-900 border-b border-gray-200 pb-3">
-              Order Summary
-            </h2>
-
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between text-gray-600 font-medium">
-                <span>Subtotal</span>
-                <span className="font-extrabold text-gray-900">${subtotal.toFixed(2)}</span>
+            <div className="flex justify-between items-center bg-white p-3 rounded-2xl border border-[#E4E2E1]/60">
+              <div>
+                <p className="text-xs font-bold text-[#1B1C1C]">1234 Greenpoint Ave</p>
+                <p className="text-[10px] text-[#76786B]">Apt 4B, Brooklyn, NY</p>
               </div>
-              <div className="flex justify-between text-gray-600 font-medium">
-                <span className="flex items-center">
-                  <MapPin size={14} className="mr-1 text-brand" />
-                  Seller Door Delivery
-                </span>
-                <span className="font-extrabold text-gray-900">${deliveryFee.toFixed(2)}</span>
-              </div>
-
-              <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
-                <span className="text-base font-extrabold text-gray-900">Total</span>
-                <span className="text-xl font-black text-brand">${totalPrice.toFixed(2)}</span>
-              </div>
-            </div>
-
-            <Link
-              href="/checkout"
-              className="w-full flex items-center justify-center space-x-2 bg-brand text-white py-4 rounded-full font-extrabold text-sm shadow-xl shadow-brand/25 hover:bg-brand-dark transition-all active:scale-95 cursor-pointer"
-            >
-              <span>Proceed to Checkout</span>
-              <ArrowRight size={18} />
-            </Link>
-
-            <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 pt-2 border-t border-gray-200/60">
-              <ShieldCheck size={16} className="text-green-600" />
-              <span>Seller-fulfilled door delivery & secure checkout</span>
+              <span className="text-xs font-bold text-[#56642B]">Today by 5:00 PM</span>
             </div>
           </div>
-        </div>
 
-      </div>
+          {/* Payment Method Selector */}
+          <div className="space-y-2">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#56642B]">
+              Payment Method
+            </h3>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: "stripe" as const, label: "Card (Stripe)", icon: "credit_card" },
+                { id: "cod" as const, label: "COD (Cash)", icon: "payments" },
+                { id: "bank" as const, label: "Bank Transfer", icon: "account_balance" },
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => setPaymentMethod(m.id)}
+                  className={`p-2.5 rounded-2xl border text-center flex flex-col items-center gap-1 transition-all ${
+                    paymentMethod === m.id
+                      ? "bg-[#56642B] text-white border-[#56642B]"
+                      : "bg-[#F0EDED] text-[#46483C] border-transparent"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">{m.icon}</span>
+                  <span className="text-[10px] font-bold">{m.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
-    </main>
+          {/* Order Summary */}
+          <div className="bg-[#F6F3F2] p-4 rounded-3xl border border-[#E4E2E1] space-y-2 text-xs">
+            <div className="flex justify-between text-[#46483C]">
+              <span>Subtotal</span>
+              <span className="font-bold text-[#1B1C1C]">${subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-[#46483C]">
+              <span>Seller Local Delivery</span>
+              <span className="font-bold text-[#1B1C1C]">${deliveryFee.toFixed(2)}</span>
+            </div>
+            <hr className="border-[#E4E2E1] my-1" />
+            <div className="flex justify-between text-sm font-extrabold text-[#1B1C1C]">
+              <span>Total</span>
+              <span className="text-[#56642B]">${grandTotal.toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Fixed Checkout Bar */}
+          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl bg-[#FBF9F8]/95 backdrop-blur-xl border-t border-[#E4E2E1] p-3 z-50">
+            <button
+              onClick={handleCheckout}
+              disabled={isProcessing}
+              className="w-full bg-[#8A9A5B] text-[#161F00] font-extrabold py-3.5 px-6 rounded-full hover:bg-[#D9EAA3] transition-all flex items-center justify-between shadow-sm cursor-pointer active:scale-98 disabled:opacity-50"
+            >
+              <span className="text-sm">
+                {isProcessing ? "Processing Order..." : "Place Order"}
+              </span>
+              <div className="flex items-center gap-1 text-sm font-black">
+                <span>${grandTotal.toFixed(2)}</span>
+                <span className="material-symbols-outlined text-[18px]">
+                  arrow_forward
+                </span>
+              </div>
+            </button>
+          </div>
+        </>
+      )}
+      </main>
+    </div>
   );
 }

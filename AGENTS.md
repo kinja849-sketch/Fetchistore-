@@ -180,40 +180,90 @@ UI displays stored data. Privileged writes go through Server Actions or verified
 
 ---
 
-# 7. UI design — source of truth
+# 7. UI Design (Source of Truth)
 
-### Structural reference (mandatory)
+This design is now the single source of truth. Every screen, component, color, typography, spacing, radius, icon set, and interaction pattern used when building the Fetchistore application must match the provided HTML designs. Do not invent new visual styles, deviate from the tokens, or create alternative layouts. The application must look and feel identical to these reference screens.
 
-The provided **Clarkson Webflow Ecommerce HTML** is the structural and section-order reference for the public storefront:
+### Aesthetic & Philosophy
 
-- Navbar (Shop / About / Press, centered logo, cart)
-- Hero (large heading + blurb + CTA)
-- Product showcases (New Arrivals, Top Sellers)
-- Collection / trending banners
-- Subscribe + image strip
-- Multi-column footer
+Soft minimalism + conscious luxury. Warm earthy palette, generous whitespace, soft shadows, rounded forms, and calm, premium product photography. The interface prioritizes local discovery, proximity, and a clean mobile-first experience.
 
-Re-implement in React + Tailwind + shadcn; do not invent a totally different public IA.
+### Design System (locked)
 
-### Visual language (NovaTrend reference)
+- **Font:** Manrope (all weights 400–700)
+- **Icons:** Material Symbols Outlined (with FILL variation when active)
+- **Framework:** Tailwind CSS with the exact custom theme shown in the reference HTML
 
-- Clean white / light backgrounds
-- Soft cards, rounded corners (~12–16px)
-- Strong product imagery
-- Clear prices and CTAs
-- Category cards with image + label
-- Mobile-first, generous spacing
+### Core Color Tokens (do not change)
 
-### Product card must show
+- **Primary:** `#56642b`
+- **Primary Container:** `#8a9a5b`
+- **Primary Fixed:** `#d9eaa3`
+- **Secondary:** `#7d562d`
+- **Secondary Container:** `#ffca98`
+- **Tertiary:** `#5c6145`
+- **Background / Surface:** `#fbf9f8`
+- **Surface Container Low:** `#f6f3f2`
+- **Surface Container:** `#f0eded`
+- **On-Surface:** `#1b1c1c`
+- **On-Surface Variant:** `#46483c`
+- **Outline:** `#76786b`
+- **Outline Variant:** `#c6c8b8`
+- **Error:** `#ba1a1a`
 
-- Image, title, condition badge
-- Price
-- Distance when location known
-- Optional "Near you" affordance
+### Radii
 
-### Required surfaces
+- **Default:** `1rem`
+- **Large:** `2rem`
+- **XL:** `3rem`
+- **Full:** `9999px` (used for primary buttons and pills)
 
-Home, Shop/Category, Product detail, Cart/Checkout, Auth, Profile, Seller listings/orders, Order detail (timeline + map + chat), static legal pages.
+### Spacing Scale
+
+- **unit:** `8px`
+- **stack-sm:** `12px`
+- **stack-md:** `24px`
+- **stack-lg:** `48px`
+- **margin-mobile:** `20px`
+- **margin-desktop:** `40px`
+- **gutter:** `24px`
+
+### Typography Scale (Manrope)
+
+- `display-lg` / `display-lg-mobile`
+- `headline-md` / `headline-sm`
+- `body-lg` / `body-md`
+- `label-md`
+- `caption`
+
+### Key Screens that must be implemented exactly as provided
+
+- **Onboarding** – Full-bleed bento image collage + large headline “Modern Craftsmanship, Near You.” + primary “Get Started” pill button + secondary “Already have an account? Sign In”.
+- **Shop Discovery / Home** – Fixed top app bar (location + notifications), search bar with filter, horizontal promotional banners, category icon row, “Trending Near You” 2-column product grid with favorite buttons.
+- **Product Details** – Image gallery + thumbnails, title/price/rating, description, variants, eco tags, sticky mobile “Add to Cart” bar.
+- **Wishlist** – Grid of saved items with remove action.
+- **Cart** – Task-focused header, item list with quantity controls, summary, checkout CTA.
+- **Delivery Chat** – Live messaging with date separators, system alerts, map-aware delivery context.
+- **Create Listing** – Multi-section form (images, details, condition segmented control, description, location, preview card) + fixed bottom publish bar.
+- **Active Listings** – Filter chips + management grid of seller items with status badges.
+- **Sold Items** – Summary bento cards + sold history list.
+- **Payments & Balance** – Hero balance card, quick stats, saved payment methods, payout settings.
+- **Settings & Privacy** – Account details list, password, 2FA toggle, data preferences, Sign Out / Delete Account.
+- **Profile** – Large avatar with edit, location chip, four bento sections (Selling, Buying, Payments, Settings).
+
+### Global UI Rules
+
+- Mobile-first. Bottom navigation is always present on main tabs (Home, Wishlist, Cart/Orders, Profile).
+- Transactional screens (Product Details, Cart, Create Listing, Chat) suppress the bottom nav and use a back-button top bar.
+- All primary actions are full-width or max-width pill buttons using `bg-primary-container` `text-on-primary-container`.
+- Cards use soft `surface-container` backgrounds, generous padding, and subtle hover scale on images.
+- Product images must maintain the high-quality, natural-light, conscious-luxury photography style shown.
+- Ambient background blurs and soft gradients are allowed only as decorative elements matching the onboarding and payments screens.
+- Desktop: sidebar navigation appears on larger breakpoints; the visual language remains identical.
+
+### Implementation Mandate
+
+When generating or modifying any UI code (React, Flutter, SwiftUI, HTML/Tailwind, etc.), the output must visually and structurally match the reference designs supplied in the HTML. If a screen is not yet present in the reference, extend the same design system without introducing new colors, fonts, radii, or patterns.
 
 ---
 

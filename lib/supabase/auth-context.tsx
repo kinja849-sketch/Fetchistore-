@@ -4,9 +4,19 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 
+export interface UserProfileData {
+  fullName: string;
+  avatarUrl: string;
+  location: string;
+  radiusKm: number;
+  phone: string;
+  bio: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  userProfile: UserProfileData;
   loading: boolean;
   isAuthModalOpen: boolean;
   openAuthModal: () => void;
@@ -15,27 +25,44 @@ interface AuthContextType {
   signUpWithEmail: (email: string, pass: string, name?: string) => Promise<{ error: Error | null }>;
   demoSignIn: () => void;
   signOut: () => Promise<void>;
+  updateProfile: (data: Partial<UserProfileData>) => void;
 }
+
+const DEFAULT_PROFILE: UserProfileData = {
+  fullName: "",
+  avatarUrl: "",
+  location: "Greenpoint, NY",
+  radiusKm: 5,
+  phone: "+1 (555) 234-5678",
+  bio: "Pre-loved fashion & sustainable home decor enthusiast.",
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
+  const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfileData>(DEFAULT_PROFILE);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Load local storage initial state on client mount to prevent SSR hydration mismatch
     if (typeof window !== "undefined") {
       const savedUser = localStorage.getItem("fetchistore_demo_user");
       if (savedUser) {
         try {
-          return JSON.parse(savedUser);
-        } catch {
-          return null;
-        }
+          setUser(JSON.parse(savedUser));
+        } catch {}
+      }
+      const savedProfile = localStorage.getItem("fetchistore_user_profile");
+      if (savedProfile) {
+        try {
+          setUserProfile((prev) => ({ ...DEFAULT_PROFILE, ...JSON.parse(savedProfile) }));
+        } catch {}
       }
     }
-    return null;
-  });
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  }, []);
 
   useEffect(() => {
     let supabase: ReturnType<typeof createClient> | null = null;
@@ -49,12 +76,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       supabase.auth.getSession().then(({ data: { session } }) => {
         setSession(session);
         setUser(session?.user ?? null);
+        if (session?.user?.user_metadata?.full_name) {
+          setUserProfile((prev) => ({
+            ...prev,
+            fullName: session.user.user_metadata.full_name,
+            avatarUrl: session.user.user_metadata.avatar_url || prev.avatarUrl,
+          }));
+        }
         setLoading(false);
       });
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        if (session?.user?.user_metadata?.full_name) {
+          setUserProfile((prev) => ({
+            ...prev,
+            fullName: session.user.user_metadata.full_name,
+            avatarUrl: session.user.user_metadata.avatar_url || prev.avatarUrl,
+          }));
+        }
         setLoading(false);
       });
 
@@ -65,6 +106,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       queueMicrotask(() => setLoading(false));
     }
   }, []);
+
+  const updateProfile = (updates: Partial<UserProfileData>) => {
+    setUserProfile((prev) => {
+      const updated = { ...prev, ...updates };
+      if (typeof window !== "undefined") {
+        localStorage.setItem("fetchistore_user_profile", JSON.stringify(updated));
+      }
+      return updated;
+    });
+  };
 
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
@@ -78,6 +129,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       if (error) throw error;
       setUser(data.user);
+      if (data.user?.user_metadata?.full_name) {
+        updateProfile({ fullName: data.user.user_metadata.full_name });
+      }
       setIsAuthModalOpen(false);
       return { error: null };
     } catch (err: unknown) {
@@ -99,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       if (data.user) {
         setUser(data.user);
+        if (name) updateProfile({ fullName: name });
       }
       setIsAuthModalOpen(false);
       return { error: null };
@@ -109,10 +164,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const demoSignIn = () => {
+    const name = userProfile.fullName || "Authenticated User";
     const demoUser = {
       id: "demo-user-123",
-      email: "alex.shopper@example.com",
-      user_metadata: { full_name: "Alex Shopper" },
+      email: `${name.toLowerCase().replace(/\s+/g, ".")}@example.com`,
+      user_metadata: { full_name: name },
       app_metadata: {},
       aud: "authenticated",
       created_at: new Date().toISOString(),
@@ -140,6 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         session,
+        userProfile,
         loading,
         isAuthModalOpen,
         openAuthModal,
@@ -148,6 +205,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUpWithEmail,
         demoSignIn,
         signOut,
+        updateProfile,
       }}
     >
       {children}
@@ -158,7 +216,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    return {
+      user: null,
+      session: null,
+      userProfile: DEFAULT_PROFILE,
+      loading: false,
+      isAuthModalOpen: false,
+      openAuthModal: () => {},
+      closeAuthModal: () => {},
+      signInWithEmail: async () => ({ error: null }),
+      signUpWithEmail: async () => ({ error: null }),
+      demoSignIn: () => {},
+      signOut: async () => {},
+      updateProfile: () => {},
+    };
   }
   return context;
 }
+

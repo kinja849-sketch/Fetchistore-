@@ -3,57 +3,81 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Store, ShoppingBag, PackageCheck, User } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 import { useCart } from "@/lib/cart-context";
 
 export function BottomNav() {
+  const { isLoaded, isSignedIn } = useUser();
   const pathname = usePathname();
   const { totalItems } = useCart();
 
-  const navItems = [
-    { name: "Home", href: "/", icon: Home },
-    { name: "Shop", href: "/shop", icon: Store },
-    { name: "Cart", href: "/cart", icon: ShoppingBag, badge: totalItems },
-    { name: "Orders", href: "/orders", icon: PackageCheck },
-    { name: "Profile", href: "/profile", icon: User },
+  const isMainScreen = pathname === "/" || pathname === "/shop";
+
+  if (!isLoaded || !isSignedIn || !isMainScreen) {
+    return null;
+  }
+
+  type NavItem = {
+    name: string;
+    href: string;
+    iconSymbol: string;
+    badge?: number;
+  };
+
+  const navItems: NavItem[] = [
+    { name: "Discover", href: "/", iconSymbol: "explore" },
+    { name: "Wishlist", href: "/wishlist", iconSymbol: "favorite" },
+    { name: "Cart", href: "/cart", iconSymbol: "local_mall", badge: totalItems },
+    { name: "Orders", href: "/orders", iconSymbol: "local_shipping" },
+    { name: "Profile", href: "/profile", iconSymbol: "person" },
   ];
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-lg bg-white/95 backdrop-blur-md border border-gray-100/80 rounded-full shadow-2xl p-1.5 transition-all">
-      <nav className="flex items-center justify-between px-1">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-          const Icon = item.icon;
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl z-[100] bg-[#FBF9F8]/95 backdrop-blur-xl border-t border-[#E4E2E1] grid grid-cols-5 items-center h-16 pb-safe px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] pointer-events-auto">
+      {navItems.map((item) => {
+        const isActive =
+          pathname === item.href ||
+          (item.href !== "/" && pathname.startsWith(item.href));
 
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`relative flex items-center space-x-1.5 px-3.5 py-2.5 rounded-full transition-all duration-200 ${
-                isActive
-                  ? "bg-brand text-white font-semibold shadow-md shadow-brand/25 scale-105"
-                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-100/80"
+        return (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={`relative flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition-all duration-200 w-full h-full text-center ${
+              isActive
+                ? "text-[#56642B] font-bold"
+                : "text-[#76786B] hover:text-[#1B1C1C]"
+            }`}
+          >
+            <div
+              className={`relative flex items-center justify-center px-3 py-1 rounded-full transition-colors ${
+                isActive ? "bg-[#8A9A5B]/20 text-[#56642B]" : ""
               }`}
             >
-              <Icon size={18} className={isActive ? "text-white" : "text-gray-500"} />
+              <span
+                className="material-symbols-outlined text-[24px]"
+                style={{
+                  fontVariationSettings: isActive ? "'FILL' 1, 'wght' 600" : "'FILL' 0, 'wght' 400",
+                }}
+              >
+                {item.iconSymbol}
+              </span>
               {item.badge !== undefined && item.badge > 0 && (
-                <span
-                  className={`absolute -top-1 -right-1 text-[10px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center border ${
-                    isActive
-                      ? "bg-white text-brand border-brand"
-                      : "bg-brand text-white border-white"
-                  }`}
-                >
+                <span className="absolute -top-1 -right-1 text-[10px] font-bold w-4 h-4 bg-[#ba1a1a] text-white rounded-full flex items-center justify-center border border-white">
                   {item.badge}
                 </span>
               )}
-              {isActive && (
-                <span className="text-xs font-bold tracking-tight">{item.name}</span>
-              )}
-            </Link>
-          );
-        })}
-      </nav>
-    </div>
+            </div>
+            <span
+              className={`text-[11px] tracking-tight mt-0.5 whitespace-nowrap truncate max-w-full ${
+                isActive ? "font-bold text-[#56642B]" : "font-medium text-[#76786B]"
+              }`}
+            >
+              {item.name}
+            </span>
+          </Link>
+        );
+      })}
+    </nav>
   );
 }

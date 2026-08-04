@@ -5,36 +5,45 @@ export default function TrustBar() {
     {
       icon: Truck,
       title: "Seller Delivery",
-      subtitle: "Direct to your door",
+      subtitle: "Direct to your house door",
+      bg: "bg-[#8A9A5B]/10 text-[#8A9A5B]",
     },
     {
       icon: ShieldCheck,
       title: "Secure Payments",
-      subtitle: "Card, bank, e-wallet, COD",
+      subtitle: "Stripe, bank, e-wallet, COD",
+      bg: "bg-[#D4A373]/10 text-[#D4A373]",
     },
     {
       icon: MapPin,
       title: "Near You",
-      subtitle: "Proximity-first discovery",
+      subtitle: "Proximity radius filter",
+      bg: "bg-[#5C6145]/10 text-[#5C6145]",
     },
     {
       icon: Headphones,
       title: "24/7 Support",
-      subtitle: "We're here to help",
+      subtitle: "Order-scoped live chat",
+      bg: "bg-[#8A9A5B]/10 text-[#8A9A5B]",
     },
   ];
 
   return (
-    <div className="bg-surface-muted border-y border-gray-100 w-full">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+    <div className="w-full py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {items.map((item, index) => {
             const Icon = item.icon;
             return (
-              <div key={index} className="flex flex-col items-center">
-                <Icon className="text-brand w-7 h-7 mb-3" />
-                <h3 className="font-semibold text-sm text-gray-900">{item.title}</h3>
-                <p className="text-xs text-gray-500 mt-1">{item.subtitle}</p>
+              <div
+                key={index}
+                className="bg-[#F6F3F2] p-5 rounded-[20px] border border-[#E4E2E1] flex flex-col items-center text-center transition-all hover:-translate-y-0.5 hover:border-[#8A9A5B]/40"
+              >
+                <div className={`p-3 rounded-full mb-3 ${item.bg}`}>
+                  <Icon className="w-6 h-6" />
+                </div>
+                <h3 className="font-extrabold text-sm text-[#333333]">{item.title}</h3>
+                <p className="text-xs text-[#76786B] mt-1">{item.subtitle}</p>
               </div>
             );
           })}

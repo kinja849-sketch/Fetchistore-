@@ -1,100 +1,109 @@
 "use client";
 
-import Image from "next/image";
+import React from "react";
 import Link from "next/link";
-import { useUser, SignUpButton } from "@clerk/nextjs";
+import { useUser, SignUpButton, SignInButton } from "@clerk/nextjs";
+import { ArrowRight } from "lucide-react";
 
 export default function HeroSection() {
   const { isSignedIn } = useUser();
 
   return (
-    <section className="relative w-full bg-[#FAFAFA] min-h-[600px] lg:min-h-[700px] flex items-center">
-      {/* Mobile background overlay */}
-      <div className="absolute inset-0 lg:hidden z-0">
-        <Image
-          src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&h=800&fit=crop&q=80"
-          alt="Fashion Shopping"
-          fill
-          className="object-cover object-center"
-          priority
-        />
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px]" />
-      </div>
+    <section className="relative w-full bg-[#FBF9F8] min-h-0 md:min-h-[580px] lg:min-h-[660px] flex flex-col justify-start md:justify-center overflow-hidden py-3 sm:py-6 md:py-16">
+      {/* Ambient Background Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#56642B]/5 blur-[100px] pointer-events-none -z-10" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#929677]/10 blur-[100px] pointer-events-none -z-10" />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="max-w-xl py-12 lg:py-0">
-            <span className="text-brand text-xs uppercase tracking-widest font-semibold block mb-4">
-              TRENDING NOW
-            </span>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-gray-900">
-              Discover Products You&apos;ll Love
-            </h1>
-            <p className="text-lg text-gray-500 mt-4 max-w-md">
-              Shop new & pre-loved items from sellers near you. Delivered straight to your door.
-            </p>
+      <main className="w-full max-w-[1280px] mx-auto px-4 md:px-10 flex flex-col md:flex-row items-center justify-center md:justify-between h-full py-1 sm:py-4 md:py-0 gap-4 sm:gap-6 md:gap-8 lg:gap-12 z-10 overflow-hidden">
+        
+        {/* Imagery Collage Section (Bento Grid) */}
+        <div className="w-full md:w-1/2 bento-grid h-[40vh] min-h-[250px] max-h-[320px] md:h-[60vh] md:min-h-[350px] md:max-h-none animate-fade-in-up">
+          {/* Bento Item 1 */}
+          <div className="bento-item-1 rounded-[22px] md:rounded-3xl overflow-hidden shadow-xs relative group bg-[#F6F3F2] border border-[#E4E2E1]">
+            <div
+              className="bg-cover bg-center w-full h-full absolute inset-0 transition-transform duration-700 group-hover:scale-105"
+              style={{
+                backgroundImage:
+                  "url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1000&auto=format&fit=crop&q=80')",
+              }}
+            />
+          </div>
 
-            <div className="mt-8 flex flex-wrap gap-4">
-              {!isSignedIn ? (
-                <SignUpButton mode="modal">
-                  <button className="bg-brand text-white px-8 py-3 rounded-full font-semibold hover:bg-brand-dark transition-colors inline-block text-center shadow-lg shadow-brand/20 cursor-pointer">
-                    Shop Now
-                  </button>
-                </SignUpButton>
-              ) : (
-                <Link
-                  href="/shop"
-                  className="bg-brand text-white px-8 py-3 rounded-full font-semibold hover:bg-brand-dark transition-colors inline-block text-center shadow-lg shadow-brand/20 cursor-pointer"
-                >
-                  Shop Now
-                </Link>
-              )}
+          {/* Bento Item 2 */}
+          <div className="bento-item-2 rounded-[22px] md:rounded-3xl overflow-hidden shadow-xs relative group bg-[#F6F3F2] border border-[#E4E2E1]">
+            <div
+              className="bg-cover bg-center w-full h-full absolute inset-0 transition-transform duration-700 group-hover:scale-105"
+              style={{
+                backgroundImage:
+                  "url('https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=600&auto=format&fit=crop&q=80')",
+              }}
+            />
+          </div>
 
-              {!isSignedIn ? (
-                <SignUpButton mode="modal">
-                  <button className="border-2 border-gray-900 text-gray-900 px-8 py-3 rounded-full font-semibold hover:bg-gray-900 hover:text-white transition-colors inline-block text-center cursor-pointer">
-                    Explore Collection
-                  </button>
-                </SignUpButton>
-              ) : (
-                <Link
-                  href="/shop"
-                  className="border-2 border-gray-900 text-gray-900 px-8 py-3 rounded-full font-semibold hover:bg-gray-900 hover:text-white transition-colors inline-block text-center cursor-pointer"
-                >
-                  Explore Collection
-                </Link>
-              )}
-            </div>
-
-            <div className="mt-10 flex items-center gap-3">
-              <div className="flex -space-x-3">
-                {["bg-brand", "bg-amber-400", "bg-blue-500", "bg-emerald-500"].map((color, i) => (
-                  <div
-                    key={i}
-                    className={`w-8 h-8 rounded-full border-2 border-white ${color} flex items-center justify-center text-white text-xs font-bold`}
-                  >
-                    {String.fromCharCode(65 + i)}
-                  </div>
-                ))}
-              </div>
-              <p className="text-sm text-gray-600 font-medium">
-                Loved by 10,000+ customers
-              </p>
-            </div>
+          {/* Bento Item 3 */}
+          <div className="bento-item-3 rounded-[22px] md:rounded-3xl overflow-hidden shadow-xs relative group bg-[#F6F3F2] border border-[#E4E2E1]">
+            <div
+              className="bg-cover bg-center w-full h-full absolute inset-0 transition-transform duration-700 group-hover:scale-105"
+              style={{
+                backgroundImage:
+                  "url('https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=600&auto=format&fit=crop&q=80')",
+              }}
+            />
           </div>
         </div>
-      </div>
 
-      {/* Desktop Image */}
-      <div className="hidden lg:block absolute top-0 right-0 w-1/2 h-full z-0">
-        <Image
-          src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&h=800&fit=crop&q=80"
-          alt="Fashion Shopping"
-          fill
-          className="object-cover object-center rounded-l-[40px]"
-          priority
-        />
-      </div>
+        {/* Content & Actions Section */}
+        <div className="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left space-y-3 sm:space-y-5 md:pl-6 animate-fade-in-up">
+          
+          <div className="space-y-1.5 sm:space-y-3 w-full">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#1B1C1C] leading-[1.2] font-sans">
+              Modern Craftsmanship, Near You.
+            </h1>
+            <p className="text-xs sm:text-base text-[#46483C] max-w-sm sm:max-w-lg mx-auto md:mx-0 leading-relaxed font-sans">
+              Discover and sell premium new and second-hand goods with local delivery and live tracking.
+            </p>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="w-full flex flex-col items-center md:items-start space-y-2 sm:space-y-3 pt-1 sm:pt-2">
+            {!isSignedIn ? (
+              <>
+                <SignUpButton mode="modal">
+                  <button className="w-full max-w-xs md:max-w-sm bg-[#8A9A5B] text-[#253000] font-bold text-xs sm:text-sm py-3.5 sm:py-4 px-6 sm:px-8 rounded-full hover:bg-[#D9EAA3] hover:-translate-y-0.5 hover:shadow-sm transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+                    <span>Get Started</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </SignUpButton>
+
+                <SignInButton mode="modal">
+                  <button className="w-full max-w-xs md:max-w-sm text-[#46483C] font-semibold text-xs sm:text-sm py-2 px-6 sm:px-8 rounded-full hover:bg-[#F6F3F2] hover:text-[#56642B] transition-colors duration-200 cursor-pointer">
+                    Already have an account? Sign In
+                  </button>
+                </SignInButton>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/shop"
+                  className="w-full max-w-xs md:max-w-sm bg-[#8A9A5B] text-[#253000] font-bold text-xs sm:text-sm py-3.5 sm:py-4 px-6 sm:px-8 rounded-full hover:bg-[#D9EAA3] hover:-translate-y-0.5 hover:shadow-sm transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-center shadow-xs"
+                >
+                  <span>Start Shopping</span>
+                  <ArrowRight size={16} />
+                </Link>
+
+                <Link
+                  href="/seller/listings/create"
+                  className="w-full max-w-xs md:max-w-sm text-[#46483C] font-semibold text-xs sm:text-sm py-2 px-6 sm:px-8 rounded-full hover:bg-[#F6F3F2] hover:text-[#56642B] transition-colors duration-200 cursor-pointer text-center"
+                >
+                  List an Item
+                </Link>
+              </>
+            )}
+          </div>
+
+        </div>
+
+      </main>
     </section>
   );
 }

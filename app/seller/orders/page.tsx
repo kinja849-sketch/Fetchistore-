@@ -26,7 +26,7 @@ interface SellerOrder {
 const initialSellerOrders: SellerOrder[] = [
   {
     id: "ord_101",
-    buyerName: "Alex Johnson",
+    buyerName: "Sarah K.",
     buyerAddress: "742 Evergreen Terrace, Springfield (House)",
     items: [
       {
@@ -91,7 +91,7 @@ export default function SellerOrdersPage() {
   };
 
   return (
-    <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28 space-y-8">
+    <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8 space-y-8">
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
         <div className="flex items-center space-x-3">

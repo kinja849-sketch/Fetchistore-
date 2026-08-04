@@ -6,16 +6,19 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { Truck, MapPin, CheckCircle2, MessageSquare, Send, ArrowLeft, Navigation, ShieldCheck, UserCheck, RefreshCw } from "lucide-react";
 import { DeliveryControlPanel, OrderStatus } from "@/components/seller/delivery-control-panel";
+import { useAuth } from "@/lib/supabase/auth-context";
 
 export default function OrderTrackingPage() {
   const params = useParams();
-  const orderId = (params.id as string) || "ord_101";
+  const orderId = params.id as string || "ord_101";
+  const { userProfile } = useAuth();
+  const buyerFirstName = (userProfile?.fullName || "there").split(" ")[0];
 
   const [orderStatus, setOrderStatus] = useState<OrderStatus>("out_for_delivery");
   const [distanceKm, setDistanceKm] = useState<number>(0.8);
   const [chatRole, setChatRole] = useState<"buyer" | "seller">("buyer");
   const [chatMessages, setChatMessages] = useState([
-    { sender: "seller", text: "Hi Alex! I've packed your items and I am currently heading to your home address.", time: "2:14 PM" },
+    { sender: "seller", text: `Hi ${buyerFirstName}! I've packed your items and I am currently heading to your home address.`, time: "2:14 PM" },
     { sender: "buyer", text: "Awesome! Thanks Marcus. Please leave it at the front door if I'm ringing down.", time: "2:16 PM" },
     { sender: "seller", text: "Got it! I am about 3 minutes away near Evergreen Terrace.", time: "2:20 PM" },
   ]);
@@ -78,7 +81,7 @@ export default function OrderTrackingPage() {
   const etaMinutes = Math.max(1, Math.round(distanceKm * 4));
 
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 space-y-8">
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8 space-y-8">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
         <div className="flex items-center space-x-3">
@@ -100,8 +103,15 @@ export default function OrderTrackingPage() {
             {orderStatus.replace("_", " ")}
           </span>
           <Link
+            href={`/orders/${orderId}/chat`}
+            className="text-xs font-extrabold text-[#161F00] bg-[#8A9A5B] px-3.5 py-1.5 rounded-full hover:bg-[#D9EAA3] transition-colors flex items-center gap-1 shadow-xs"
+          >
+            <MessageSquare size={14} />
+            <span>Chat</span>
+          </Link>
+          <Link
             href="/seller/orders"
-            className="text-xs font-extrabold text-brand bg-brand-light px-3.5 py-1.5 rounded-full border border-brand/20 hover:bg-brand hover:text-white transition-colors"
+            className="text-xs font-extrabold text-[#56642B] bg-[#8A9A5B]/20 px-3.5 py-1.5 rounded-full border border-[#8A9A5B]/30 hover:bg-[#56642B] hover:text-white transition-colors"
           >
             Seller Portal →
           </Link>

@@ -101,16 +101,20 @@ export function AuthModal() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {tab === "signup" && (
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                Full Name
+              </label>
               <div className="relative">
-                <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                  <UserIcon size={18} />
+                </div>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Alex Shopper"
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all"
+                  placeholder="Enter your name (e.g. Sarah Connor)"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:bg-white focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all"
                 />
               </div>
             </div>

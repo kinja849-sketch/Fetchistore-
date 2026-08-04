@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 export interface CartItem {
   id: string;
@@ -14,7 +14,7 @@ export interface CartItem {
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, "quantity">) => void;
+  addItem: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -50,40 +50,45 @@ const INITIAL_DEMO_ITEMS: CartItem[] = [
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(INITIAL_DEMO_ITEMS);
 
-  // Sync to local storage on client if needed
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("fetchistore_cart");
-      if (saved) {
-        setItems(JSON.parse(saved));
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("fetchistore_cart");
+        if (saved) setItems(JSON.parse(saved));
+      } catch {
+        // Ignore JSON parse error
       }
-    } catch {
-      // Fallback to initial
     }
   }, []);
 
-  const saveCart = (newItems: CartItem[]) => {
-    setItems(newItems);
+  // Sync cart changes to localStorage
+  useEffect(() => {
     try {
-      localStorage.setItem("fetchistore_cart", JSON.stringify(newItems));
+      localStorage.setItem("fetchistore_cart", JSON.stringify(items));
     } catch {
       // Ignore write error
     }
-  };
+  }, [items]);
 
-  const addItem = (item: Omit<CartItem, "quantity">) => {
-    const existingIndex = items.findIndex((i) => i.id === item.id);
-    if (existingIndex > -1) {
-      const updated = [...items];
-      updated[existingIndex].quantity += 1;
-      saveCart(updated);
-    } else {
-      saveCart([...items, { ...item, quantity: 1 }]);
-    }
+  const addItem = (item: Omit<CartItem, "quantity"> & { quantity?: number }) => {
+    const qty = item.quantity || 1;
+    setItems((prev) => {
+      const existingIndex = prev.findIndex((i) => i.id === item.id);
+      if (existingIndex > -1) {
+        const updated = [...prev];
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          quantity: updated[existingIndex].quantity + qty,
+        };
+        return updated;
+      } else {
+        return [...prev, { ...item, quantity: qty }];
+      }
+    });
   };
 
   const removeItem = (id: string) => {
-    saveCart(items.filter((i) => i.id !== id));
+    setItems((prev) => prev.filter((i) => i.id !== id));
   };
 
   const updateQuantity = (id: string, quantity: number) => {
@@ -91,13 +96,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeItem(id);
       return;
     }
-    saveCart(
-      items.map((item) => (item.id === id ? { ...item, quantity } : item))
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
     );
   };
 
   const clearCart = () => {
-    saveCart([]);
+    setItems([]);
   };
 
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);

@@ -2,23 +2,34 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { CreditCard, Landmark, Wallet, Banknote, ShieldCheck, MapPin, Truck, CheckCircle2 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+
+import { useAuth } from "@/lib/supabase/auth-context";
+import { useUser } from "@clerk/nextjs";
 
 type PaymentMethod = "stripe" | "bank_transfer" | "ewallet" | "cod";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, subtotal, deliveryFee, totalPrice, clearCart } = useCart();
+  const { userProfile } = useAuth();
+  const { user } = useUser();
+
+  const authenticatedName =
+    userProfile.fullName ||
+    user?.fullName ||
+    user?.username ||
+    user?.primaryEmailAddress?.emailAddress?.split("@")[0] ||
+    "Delivery Recipient";
   
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("stripe");
   const [address, setAddress] = useState({
-    fullName: "Alex Johnson",
+    fullName: authenticatedName,
     street: "742 Evergreen Terrace",
-    city: "Springfield",
-    postalCode: "97477",
-    phone: "+1 (555) 234-5678",
+    city: "Portland",
+    postalCode: "97201",
+    phone: userProfile.phone || "+1 (555) 234-5678",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -34,7 +45,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28 space-y-8">
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8 space-y-8">
       
       {/* Page Title */}
       <div className="border-b border-gray-100 pb-4">
