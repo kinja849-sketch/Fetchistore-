@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { useUser, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { useCart } from "@/lib/cart-context";
 
 export function Navbar() {
+  const { user } = useUser();
+  const isSignedIn = !!user;
   const pathname = usePathname();
   const router = useRouter();
   const { totalItems } = useCart();
@@ -176,10 +178,9 @@ export function Navbar() {
         </Link>
 
         {/* User Avatar / Auth */}
-        <Show when="signed-in">
+        {isSignedIn ? (
           <UserButton />
-        </Show>
-        <Show when="signed-out">
+        ) : (
           <div className="flex items-center gap-2">
             <SignInButton mode="modal">
               <button className="px-3.5 py-1.5 bg-[#8A9A5B] text-[#161F00] hover:bg-[#D9EAA3] text-xs font-bold rounded-full transition-colors cursor-pointer">
@@ -192,7 +193,7 @@ export function Navbar() {
               </button>
             </SignUpButton>
           </div>
-        </Show>
+        )}
       </div>
     </header>
   );
