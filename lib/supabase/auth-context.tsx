@@ -52,13 +52,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const savedUser = localStorage.getItem("fetchistore_demo_user");
       if (savedUser) {
         try {
-          setUser(JSON.parse(savedUser));
+          const parsedUser = JSON.parse(savedUser);
+          queueMicrotask(() => setUser(parsedUser));
         } catch {}
       }
       const savedProfile = localStorage.getItem("fetchistore_user_profile");
       if (savedProfile) {
         try {
-          setUserProfile((prev) => ({ ...DEFAULT_PROFILE, ...JSON.parse(savedProfile) }));
+          const parsedProfile = JSON.parse(savedProfile);
+          queueMicrotask(() => setUserProfile({ ...DEFAULT_PROFILE, ...parsedProfile }));
         } catch {}
       }
     }
@@ -122,15 +124,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithEmail = async (email: string, pass: string) => {
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password: pass,
-      });
-      if (error) throw error;
-      setUser(data.user);
-      if (data.user?.user_metadata?.full_name) {
-        updateProfile({ fullName: data.user.user_metadata.full_name });
+      if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        const supabase = createClient();
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password: pass,
+        });
+        if (error) throw error;
+        setUser(data.user);
+        if (data.user?.user_metadata?.full_name) {
+          updateProfile({ fullName: data.user.user_metadata.full_name });
+        }
+      } else {
+        // Local dev fallback when Supabase credentials are not set
+        const displayName = email.split("@")[0];
+        const localUser = {
+          id: `user-${Date.now()}`,
+          email,
+          user_metadata: { full_name: displayName },
+          app_metadata: {},
+          aud: "authenticated",
+          created_at: new Date().toISOString(),
+        } as unknown as User;
+        setUser(localUser);
+        localStorage.setItem("fetchistore_demo_user", JSON.stringify(localUser));
+        updateProfile({ fullName: displayName });
       }
       setIsAuthModalOpen(false);
       return { error: null };
@@ -142,17 +160,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUpWithEmail = async (email: string, pass: string, name?: string) => {
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password: pass,
-        options: {
-          data: { full_name: name || email.split("@")[0] },
-        },
-      });
-      if (error) throw error;
-      if (data.user) {
-        setUser(data.user);
+      if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        const supabase = createClient();
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password: pass,
+          options: {
+            data: { full_name: name || email.split("@")[0] },
+          },
+        });
+        if (error) throw error;
+        if (data.user) {
+          setUser(data.user);
+          if (name) updateProfile({ fullName: name });
+        }
+      } else {
+        // Local dev fallback when Supabase credentials are not set
+        const displayName = name || email.split("@")[0];
+        const localUser = {
+          id: `user-${Date.now()}`,
+          email,
+          user_metadata: { full_name: displayName },
+          app_metadata: {},
+          aud: "authenticated",
+          created_at: new Date().toISOString(),
+        } as unknown as User;
+        setUser(localUser);
+        localStorage.setItem("fetchistore_demo_user", JSON.stringify(localUser));
         if (name) updateProfile({ fullName: name });
       }
       setIsAuthModalOpen(false);

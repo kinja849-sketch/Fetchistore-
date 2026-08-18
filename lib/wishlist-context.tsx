@@ -52,7 +52,10 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       try {
         const saved = localStorage.getItem("fetchistore_wishlist_items");
-        if (saved) setWishlistItems(JSON.parse(saved));
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          queueMicrotask(() => setWishlistItems(parsed));
+        }
       } catch {
         // Ignore JSON parse errors
       }

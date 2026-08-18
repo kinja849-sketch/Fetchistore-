@@ -5,7 +5,7 @@ import AuthenticatedFeed from "@/components/home/authenticated-feed";
 import UnauthenticatedWelcome from "@/components/home/unauthenticated-welcome";
 
 export default function Home() {
-  const { isSignedIn, isLoaded } = useUser();
+  const { user, isLoaded } = useUser();
 
   if (!isLoaded) {
     return (
@@ -15,5 +15,5 @@ export default function Home() {
     );
   }
 
-  return isSignedIn ? <AuthenticatedFeed /> : <UnauthenticatedWelcome />;
+  return user ? <AuthenticatedFeed /> : <UnauthenticatedWelcome />;
 }

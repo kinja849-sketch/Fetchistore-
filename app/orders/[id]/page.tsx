@@ -1,26 +1,54 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useParams } from "next/navigation";
-import { Truck, MapPin, CheckCircle2, MessageSquare, Send, ArrowLeft, Navigation, ShieldCheck, UserCheck, RefreshCw } from "lucide-react";
+import { MessageSquare, ArrowLeft } from "lucide-react";
 import { DeliveryControlPanel, OrderStatus } from "@/components/seller/delivery-control-panel";
 import { useAuth } from "@/lib/supabase/auth-context";
+import { GoogleMap } from "@/components/maps/google-map";
+import { Coordinates, estimateDeliveryEta } from "@/lib/geo";
+import { useUserLocation } from "@/lib/hooks/use-user-location";
+import { getDirectionsRoute, DirectionsResult } from "@/lib/directions";
 
 export default function OrderTrackingPage() {
   const params = useParams();
-  const orderId = params.id as string || "ord_101";
+  const orderId = (params?.id as string) || "ord_101";
   const { userProfile } = useAuth();
   const buyerFirstName = (userProfile?.fullName || "there").split(" ")[0];
 
+  const { location: userLocation, refreshLocation } = useUserLocation();
+  const buyerCoords: Coordinates | null = userLocation;
+
   const [orderStatus, setOrderStatus] = useState<OrderStatus>("out_for_delivery");
   const [distanceKm, setDistanceKm] = useState<number>(0.8);
+  const [directionsInfo, setDirectionsInfo] = useState<DirectionsResult | null>(null);
+
+  // Derive active seller position relative to buyer location
+  const sellerCoords: Coordinates | null = buyerCoords
+    ? {
+        lat: buyerCoords.lat + distanceKm * 0.007,
+        lng: buyerCoords.lng - distanceKm * 0.007,
+      }
+    : null;
+
+  useEffect(() => {
+    if (sellerCoords && buyerCoords) {
+      getDirectionsRoute(sellerCoords, buyerCoords).then((res) => {
+        setDirectionsInfo(res);
+      });
+    }
+  }, [sellerCoords, buyerCoords]);
+
+  const etaInfo = estimateDeliveryEta(distanceKm);
+  const displayEtaText = directionsInfo?.durationText || etaInfo.text;
+  const displayDistanceText = directionsInfo?.distanceText || `${distanceKm.toFixed(1)} km`;
+
   const [chatRole, setChatRole] = useState<"buyer" | "seller">("buyer");
   const [chatMessages, setChatMessages] = useState([
     { sender: "seller", text: `Hi ${buyerFirstName}! I've packed your items and I am currently heading to your home address.`, time: "2:14 PM" },
     { sender: "buyer", text: "Awesome! Thanks Marcus. Please leave it at the front door if I'm ringing down.", time: "2:16 PM" },
-    { sender: "seller", text: "Got it! I am about 3 minutes away near Evergreen Terrace.", time: "2:20 PM" },
+    { sender: "seller", text: "Got it! I am about 3 minutes away.", time: "2:20 PM" },
   ]);
   const [newMessage, setNewMessage] = useState("");
 
@@ -51,25 +79,6 @@ export default function OrderTrackingPage() {
     }
   };
 
-  // Timeline steps computation based on canonical status machine
-  const getStepStatus = (stepKey: OrderStatus) => {
-    const orderSequence: OrderStatus[] = [
-      "paid",
-      "accepted",
-      "out_for_delivery",
-      "nearby",
-      "delivered",
-      "completed",
-    ];
-
-    const currentIdx = orderSequence.indexOf(orderStatus);
-    const stepIdx = orderSequence.indexOf(stepKey);
-
-    if (currentIdx > stepIdx) return "completed";
-    if (currentIdx === stepIdx) return "current";
-    return "pending";
-  };
-
   const steps = [
     { title: "Order Placed & Paid", desc: "Payment verified by system", key: "paid" as OrderStatus },
     { title: "Accepted by Seller", desc: "Seller packed items", key: "accepted" as OrderStatus },
@@ -77,8 +86,6 @@ export default function OrderTrackingPage() {
     { title: "Nearby", desc: "Arriving within 5 mins (< 0.5km)", key: "nearby" as OrderStatus },
     { title: "Delivered & Completed", desc: "Direct to door confirmation", key: "completed" as OrderStatus },
   ];
-
-  const etaMinutes = Math.max(1, Math.round(distanceKm * 4));
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8 space-y-8">
@@ -130,37 +137,47 @@ export default function OrderTrackingPage() {
         {/* Left Column: Live Map & Delivery Status Timeline (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
           {/* Live Delivery Map Box */}
-          <div className="relative w-full h-72 sm:h-80 bg-gray-900 rounded-3xl overflow-hidden shadow-lg border border-gray-200">
-            {/* Map background image mock */}
-            <Image
-              src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=1000&auto=format&fit=crop&q=80"
-              alt="Live delivery map"
-              fill
-              className="object-cover opacity-60"
-            />
-
-            {/* Map Overlay Badge */}
-            <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-gray-100 shadow-md flex items-center space-x-2">
-              <div className="w-3 h-3 bg-brand rounded-full animate-ping" />
+          <div className="relative w-full rounded-3xl overflow-hidden shadow-lg border border-gray-200">
+            {/* Overlay Status Badge */}
+            <div className="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-gray-100 shadow-md flex items-center space-x-2">
+              <div className="w-3 h-3 bg-[#56642B] rounded-full animate-ping" />
               <div>
-                <div className="text-[11px] font-extrabold text-gray-900">Seller Live GPS Location</div>
-                <div className="text-[10px] text-brand font-bold">
-                  {distanceKm > 0 ? `${distanceKm} km away • ETA ${etaMinutes} mins` : "Arrived at buyer door"}
+                <div className="text-[11px] font-extrabold text-gray-900">Seller Live GPS Tracking</div>
+                <div className="text-[10px] text-[#56642B] font-extrabold">
+                  {distanceKm > 0
+                    ? `${displayDistanceText} away • ${displayEtaText}`
+                    : "Arrived at buyer door"}
                 </div>
               </div>
             </div>
 
-            {/* Delivery Pins Visual */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative flex flex-col items-center animate-bounce">
-                <div className="bg-brand text-white p-2.5 rounded-full shadow-2xl">
-                  <Truck size={22} />
-                </div>
-                <span className="bg-black/80 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-md mt-1">
-                  Marcus (Seller - Direct Delivery)
-                </span>
-              </div>
-            </div>
+            {/* Interactive Map */}
+            <GoogleMap
+              center={buyerCoords}
+              zoom={14}
+              height="h-72 sm:h-80"
+              showRoute={true}
+              interactive={true}
+              onRetryLocation={refreshLocation}
+              markers={
+                buyerCoords && sellerCoords
+                  ? [
+                      {
+                        id: "buyer-destination",
+                        position: buyerCoords,
+                        title: "Buyer Home Address",
+                        type: "buyer",
+                      },
+                      {
+                        id: "seller-delivery-vehicle",
+                        position: sellerCoords,
+                        title: `Marcus (Seller) — ${displayDistanceText} away`,
+                        type: "seller",
+                      },
+                    ]
+                  : []
+              }
+            />
           </div>
 
           {/* Timeline */}
@@ -170,34 +187,35 @@ export default function OrderTrackingPage() {
             </h2>
 
             <div className="space-y-4 relative before:absolute before:left-3.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-gray-200">
-              {steps.map((step, idx) => {
-                const statusState = getStepStatus(step.key);
+              {steps.map((step) => {
+                const orderSequence: OrderStatus[] = [
+                  "paid",
+                  "accepted",
+                  "out_for_delivery",
+                  "nearby",
+                  "delivered",
+                  "completed",
+                ];
+                const currentIdx = orderSequence.indexOf(orderStatus);
+                const stepIdx = orderSequence.indexOf(step.key);
+                const statusState = currentIdx > stepIdx ? "completed" : currentIdx === stepIdx ? "current" : "pending";
+
                 return (
-                  <div key={idx} className="flex items-start space-x-4 relative z-10">
+                  <div key={step.key} className="flex items-start space-x-3.5 relative z-10">
                     <div
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
                         statusState === "completed"
-                          ? "bg-green-600 text-white shadow-sm"
+                          ? "bg-[#56642B] text-white"
                           : statusState === "current"
-                          ? "bg-brand text-white shadow-md shadow-brand/30 animate-pulse"
-                          : "bg-gray-200 text-gray-400"
+                          ? "bg-[#8A9A5B] text-white ring-4 ring-[#8A9A5B]/20"
+                          : "bg-gray-100 text-gray-400"
                       }`}
                     >
-                      {statusState === "completed" ? (
-                        <CheckCircle2 size={14} />
-                      ) : (
-                        <span>{idx + 1}</span>
-                      )}
+                      ✓
                     </div>
                     <div>
-                      <h3
-                        className={`text-sm font-extrabold ${
-                          statusState === "current" ? "text-brand" : "text-gray-900"
-                        }`}
-                      >
-                        {step.title}
-                      </h3>
-                      <p className="text-xs text-gray-500">{step.desc}</p>
+                      <h4 className="text-sm font-extrabold text-gray-900">{step.title}</h4>
+                      <p className="text-xs text-gray-500 font-medium">{step.desc}</p>
                     </div>
                   </div>
                 );
@@ -206,80 +224,66 @@ export default function OrderTrackingPage() {
           </div>
         </div>
 
-        {/* Right Column: Seller Direct Chat & Order Details (5 cols) */}
+        {/* Right Column: Order Summary & Scoped Chat (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
-          {/* Order-Scoped Seller Chat */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4 flex flex-col h-[420px]">
+          <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <div className="flex items-center space-x-2">
-                <MessageSquare className="text-brand" size={18} />
-                <div>
-                  <h2 className="text-sm font-extrabold text-gray-900">Direct Order Chat</h2>
-                  <p className="text-[10px] text-gray-500">Order-scoped chat between Buyer & Seller</p>
-                </div>
+              <h3 className="text-sm font-extrabold text-gray-900">Order-Scoped Seller Chat</h3>
+              <div className="flex bg-gray-100 p-0.5 rounded-full text-[10px] font-bold">
+                <button
+                  onClick={() => setChatRole("buyer")}
+                  className={`px-2.5 py-1 rounded-full transition-colors ${
+                    chatRole === "buyer" ? "bg-[#56642B] text-white" : "text-gray-600"
+                  }`}
+                >
+                  As Buyer
+                </button>
+                <button
+                  onClick={() => setChatRole("seller")}
+                  className={`px-2.5 py-1 rounded-full transition-colors ${
+                    chatRole === "seller" ? "bg-[#56642B] text-white" : "text-gray-600"
+                  }`}
+                >
+                  As Seller
+                </button>
               </div>
-
-              {/* Chat Role Toggle for Testing */}
-              <button
-                onClick={() => setChatRole(chatRole === "buyer" ? "seller" : "buyer")}
-                className="text-[10px] bg-gray-100 hover:bg-brand-light hover:text-brand text-gray-700 font-extrabold px-2.5 py-1 rounded-full border border-gray-200 transition-colors flex items-center space-x-1"
-                title="Toggle messaging perspective"
-              >
-                <UserCheck size={12} />
-                <span>As: {chatRole === "buyer" ? "Buyer" : "Seller"}</span>
-              </button>
             </div>
 
-            {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
-              {chatMessages.map((msg, i) => (
+            <div className="h-64 overflow-y-auto space-y-3 pr-1">
+              {chatMessages.map((msg, idx) => (
                 <div
-                  key={i}
+                  key={idx}
                   className={`flex flex-col ${msg.sender === "buyer" ? "items-end" : "items-start"}`}
                 >
-                  <span className="text-[9px] font-bold text-gray-400 mb-0.5 px-1 uppercase tracking-wider">
-                    {msg.sender}
-                  </span>
                   <div
-                    className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl leading-relaxed ${
+                    className={`max-w-[85%] p-3 rounded-2xl text-xs font-medium ${
                       msg.sender === "buyer"
-                        ? "bg-brand text-white rounded-tr-none"
-                        : "bg-gray-100 text-gray-900 rounded-tl-none"
+                        ? "bg-[#8A9A5B] text-white rounded-br-none"
+                        : "bg-gray-100 text-gray-900 rounded-bl-none"
                     }`}
                   >
                     {msg.text}
                   </div>
-                  <span className="text-[9px] text-gray-400 mt-1 px-1">{msg.time}</span>
+                  <span className="text-[10px] text-gray-400 mt-1 px-1">{msg.time}</span>
                 </div>
               ))}
             </div>
 
-            {/* Chat Form */}
-            <form onSubmit={handleSendMessage} className="flex items-center space-x-2 border-t border-gray-100 pt-3">
+            <form onSubmit={handleSendMessage} className="flex gap-2 pt-2 border-t border-gray-100">
               <input
                 type="text"
-                placeholder={`Message as ${chatRole}...`}
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                className="flex-1 px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-full text-xs focus:ring-2 focus:ring-brand focus:outline-none"
+                placeholder={`Message as ${chatRole}...`}
+                className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-4 py-2 text-xs text-gray-900 focus:outline-none focus:border-[#8A9A5B]"
               />
               <button
                 type="submit"
-                className="p-2.5 bg-brand text-white rounded-full hover:bg-brand-dark transition-transform active:scale-95 shadow-sm"
+                className="p-2 bg-[#56642B] text-white rounded-full hover:bg-[#8A9A5B] transition-colors cursor-pointer"
               >
-                <Send size={14} />
+                <MessageSquare size={16} />
               </button>
             </form>
-          </div>
-
-          {/* Delivery Summary Info Box */}
-          <div className="bg-gray-50 border border-gray-100 rounded-3xl p-5 space-y-3 text-xs">
-            <h3 className="font-extrabold text-gray-900 text-sm">Delivery & Fulfillment Details</h3>
-            <div className="space-y-1.5 text-gray-600">
-              <p><span className="font-bold text-gray-800">Destination:</span> 742 Evergreen Terrace, Springfield</p>
-              <p><span className="font-bold text-gray-800">Payment:</span> Stripe Card ($179.98)</p>
-              <p><span className="font-bold text-gray-800">Delivery Method:</span> Seller Self-Delivery to Door</p>
-            </div>
           </div>
         </div>
       </div>

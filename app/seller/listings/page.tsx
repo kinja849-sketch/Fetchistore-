@@ -42,7 +42,7 @@ export default function ActiveListingsPage() {
 
       {/* Filter Chips */}
       <div className="flex items-center space-x-2 overflow-x-auto pb-1 text-xs">
-        {["all", "fashion", "electronics", "home decor", "footwear"].map((cat) => {
+        {["all", "fashion", "electronics", "beauty", "fitness", "home-decor", "accessories"].map((cat) => {
           const isActive = selectedCategory === cat;
           return (
             <button
@@ -54,7 +54,7 @@ export default function ActiveListingsPage() {
                   : "bg-[#F0EDED] text-[#46483C] hover:bg-[#E4E2E1]"
               }`}
             >
-              {cat === "all" ? `All Active (${listings.length})` : cat}
+              {cat === "all" ? `All Active (${listings.length})` : cat.replace("-", " ")}
             </button>
           );
         })}

@@ -20,7 +20,7 @@ export default function CategoryGrid() {
         
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
           {categories.map((category) => (
-            <Link href={`/category/${category.slug}`} key={category.slug}>
+            <Link href={`/shop/category/${category.slug}`} key={category.slug}>
               <div className="relative group cursor-pointer text-center">
                 <div className="relative w-28 h-28 sm:w-32 sm:h-32 mx-auto rounded-full overflow-hidden bg-gray-100 ring-2 ring-transparent group-hover:ring-brand transition-all duration-300">
                   <Image

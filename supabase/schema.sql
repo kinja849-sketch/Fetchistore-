@@ -17,7 +17,7 @@ $$ language plpgsql;
 
 -- 3. Profiles Table (Buyer / Seller users)
 create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
+  id text primary key,
   role text not null default 'user',
   full_name text,
   avatar_url text,
@@ -32,28 +32,10 @@ create trigger set_profiles_updated_at
   before update on public.profiles
   for each row execute function update_updated_at_column();
 
--- Auto-create profile trigger on auth.users signup
-create or replace function public.handle_new_user()
-returns trigger as $$
-begin
-  insert into public.profiles (id, full_name, avatar_url)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data->>'full_name', new.email),
-    new.raw_user_meta_data->>'avatar_url'
-  );
-  return new;
-end;
-$$ language plpgsql security definer;
-
-create or replace trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
-
 -- 4. Delivery Addresses Table
 create table if not exists public.addresses (
   id uuid primary key default uuid_generate_v4(),
-  buyer_id uuid not null references public.profiles(id) on delete cascade,
+  buyer_id text not null references public.profiles(id) on delete cascade,
   label text default 'Home',
   address_line1 text not null,
   address_line2 text,
@@ -79,8 +61,9 @@ create table if not exists public.categories (
 -- 6. Listings Table (New & Second-Hand Products)
 create table if not exists public.listings (
   id uuid primary key default uuid_generate_v4(),
-  seller_id uuid not null references public.profiles(id) on delete cascade,
+  seller_id text not null references public.profiles(id) on delete cascade,
   category_id uuid references public.categories(id) on delete set null,
+  category_slug text,
   title text not null,
   description text not null,
   condition text not null check (condition in ('new', 'like_new', 'good', 'fair')),
@@ -107,8 +90,8 @@ create trigger set_listings_updated_at
 -- 7. Orders Table
 create table if not exists public.orders (
   id uuid primary key default uuid_generate_v4(),
-  buyer_id uuid not null references public.profiles(id),
-  seller_id uuid not null references public.profiles(id),
+  buyer_id text not null references public.profiles(id),
+  seller_id text not null references public.profiles(id),
   status text not null default 'pending' check (
     status in ('pending', 'paid', 'cod_pending', 'accepted', 'out_for_delivery', 'nearby', 'delivered', 'completed', 'cancelled', 'refunded')
   ),
@@ -168,15 +151,15 @@ create index if not exists idx_delivery_locations_location on public.delivery_lo
 create table if not exists public.conversations (
   id uuid primary key default uuid_generate_v4(),
   order_id uuid not null references public.orders(id) on delete cascade unique,
-  buyer_id uuid not null references public.profiles(id),
-  seller_id uuid not null references public.profiles(id),
+  buyer_id text not null references public.profiles(id),
+  seller_id text not null references public.profiles(id),
   created_at timestamptz default now()
 );
 
 create table if not exists public.messages (
   id uuid primary key default uuid_generate_v4(),
   conversation_id uuid not null references public.conversations(id) on delete cascade,
-  sender_id uuid not null references public.profiles(id),
+  sender_id text not null references public.profiles(id),
   content text not null,
   created_at timestamptz default now()
 );
@@ -186,7 +169,7 @@ create index if not exists idx_messages_conversation on public.messages(conversa
 -- 12. Audit Logs Table
 create table if not exists public.logs (
   id uuid primary key default uuid_generate_v4(),
-  actor_id uuid references public.profiles(id),
+  actor_id text references public.profiles(id),
   action text not null,
   meta jsonb default '{}'::jsonb,
   created_at timestamptz default now()
@@ -208,101 +191,52 @@ alter table public.conversations enable row level security;
 alter table public.messages enable row level security;
 alter table public.logs enable row level security;
 
--- Profiles: Public read, user can update own profile
-create policy "Public profiles read" on public.profiles for select using (true);
-create policy "Users update own profile" on public.profiles for update using (auth.uid() = id);
+-- Profiles: Public read/insert/update
+create policy "Profiles select" on public.profiles for select using (true);
+create policy "Profiles insert" on public.profiles for insert with check (true);
+create policy "Profiles update" on public.profiles for update using (true);
 
--- Addresses: Buyers see & update their own addresses
-create policy "Buyers view own addresses" on public.addresses for select using (auth.uid() = buyer_id);
-create policy "Buyers insert own addresses" on public.addresses for insert with check (auth.uid() = buyer_id);
-create policy "Buyers update own addresses" on public.addresses for update using (auth.uid() = buyer_id);
-create policy "Buyers delete own addresses" on public.addresses for delete using (auth.uid() = buyer_id);
+-- Addresses: Public select/insert/update/delete
+create policy "Addresses select" on public.addresses for select using (true);
+create policy "Addresses insert" on public.addresses for insert with check (true);
+create policy "Addresses update" on public.addresses for update using (true);
+create policy "Addresses delete" on public.addresses for delete using (true);
 
 -- Categories: Public read
 create policy "Public categories read" on public.categories for select using (true);
 
--- Listings: Public read active listings, seller manages their own listings
-create policy "Public active listings read" on public.listings for select using (is_active = true or auth.uid() = seller_id);
-create policy "Sellers create listings" on public.listings for insert with check (auth.uid() = seller_id);
-create policy "Sellers update own listings" on public.listings for update using (auth.uid() = seller_id);
-create policy "Sellers delete own listings" on public.listings for delete using (auth.uid() = seller_id);
+-- Listings: Public read, insert, update, delete
+create policy "Listings select" on public.listings for select using (true);
+create policy "Listings insert" on public.listings for insert with check (true);
+create policy "Listings update" on public.listings for update using (true);
+create policy "Listings delete" on public.listings for delete using (true);
 
--- Orders: Buyers view their orders, Sellers view orders they fulfill
-create policy "Order participants view orders" on public.orders for select using (auth.uid() = buyer_id or auth.uid() = seller_id);
-create policy "Buyers create orders" on public.orders for insert with check (auth.uid() = buyer_id);
-create policy "Order participants update orders" on public.orders for update using (auth.uid() = buyer_id or auth.uid() = seller_id);
+-- Orders: Public select, insert, update
+create policy "Orders select" on public.orders for select using (true);
+create policy "Orders insert" on public.orders for insert with check (true);
+create policy "Orders update" on public.orders for update using (true);
 
--- Order items: Order participants view items
-create policy "Order participants view items" on public.order_items for select using (
-  exists (
-    select 1 from public.orders
-    where orders.id = order_items.order_id
-    and (orders.buyer_id = auth.uid() or orders.seller_id = auth.uid())
-  )
-);
-create policy "Buyers insert order items" on public.order_items for insert with check (
-  exists (
-    select 1 from public.orders
-    where orders.id = order_items.order_id
-    and orders.buyer_id = auth.uid()
-  )
-);
+-- Order items: Public select, insert
+create policy "Order items select" on public.order_items for select using (true);
+create policy "Order items insert" on public.order_items for insert with check (true);
 
--- Delivery updates & locations: Order participants view delivery data
-create policy "Order participants view delivery updates" on public.delivery_updates for select using (
-  exists (
-    select 1 from public.orders
-    where orders.id = delivery_updates.order_id
-    and (orders.buyer_id = auth.uid() or orders.seller_id = auth.uid())
-  )
-);
-create policy "Sellers insert delivery updates" on public.delivery_updates for insert with check (
-  exists (
-    select 1 from public.orders
-    where orders.id = delivery_updates.order_id
-    and orders.seller_id = auth.uid()
-  )
-);
+-- Delivery updates & locations: Public select, insert
+create policy "Delivery updates select" on public.delivery_updates for select using (true);
+create policy "Delivery updates insert" on public.delivery_updates for insert with check (true);
 
-create policy "Order participants view live delivery locations" on public.delivery_locations for select using (
-  exists (
-    select 1 from public.orders
-    where orders.id = delivery_locations.order_id
-    and (orders.buyer_id = auth.uid() or orders.seller_id = auth.uid())
-  )
-);
-create policy "Sellers insert live location points" on public.delivery_locations for insert with check (
-  exists (
-    select 1 from public.orders
-    where orders.id = delivery_locations.order_id
-    and orders.seller_id = auth.uid()
-    and orders.status in ('out_for_delivery', 'nearby')
-  )
-);
+create policy "Delivery locations select" on public.delivery_locations for select using (true);
+create policy "Delivery locations insert" on public.delivery_locations for insert with check (true);
 
--- Conversations & Messages: Order-scoped
-create policy "Order participants view conversations" on public.conversations for select using (
-  auth.uid() = buyer_id or auth.uid() = seller_id
-);
-create policy "Order participants create conversations" on public.conversations for insert with check (
-  auth.uid() = buyer_id or auth.uid() = seller_id
-);
+-- Conversations & Messages: Public select, insert
+create policy "Conversations select" on public.conversations for select using (true);
+create policy "Conversations insert" on public.conversations for insert with check (true);
 
-create policy "Conversation participants view messages" on public.messages for select using (
-  exists (
-    select 1 from public.conversations
-    where conversations.id = messages.conversation_id
-    and (conversations.buyer_id = auth.uid() or conversations.seller_id = auth.uid())
-  )
-);
-create policy "Conversation participants insert messages" on public.messages for insert with check (
-  auth.uid() = sender_id and
-  exists (
-    select 1 from public.conversations
-    where conversations.id = messages.conversation_id
-    and (conversations.buyer_id = auth.uid() or conversations.seller_id = auth.uid())
-  )
-);
+create policy "Messages select" on public.messages for select using (true);
+create policy "Messages insert" on public.messages for insert with check (true);
+
+-- Logs: Public select, insert
+create policy "Logs select" on public.logs for select using (true);
+create policy "Logs insert" on public.logs for insert with check (true);
 
 -- ──────────────────────────────────────────────
 -- SEED DATA (Categories)
@@ -317,3 +251,52 @@ values
   ('Home Decor', 'home-decor', 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400&h=400&fit=crop&q=80', 5),
   ('Accessories', 'accessories', 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400&h=400&fit=crop&q=80', 6)
 on conflict (slug) do nothing;
+
+-- ──────────────────────────────────────────────
+-- POSTGIS SPATIAL RPC FUNCTIONS
+-- ──────────────────────────────────────────────
+
+create or replace function nearby_listings(
+  lat float8,
+  lng float8,
+  radius_meters float8 default 50000
+)
+returns table (
+  id uuid,
+  seller_id text,
+  category_slug text,
+  title text,
+  description text,
+  condition text,
+  price numeric,
+  old_price numeric,
+  images text[],
+  is_active boolean,
+  created_at timestamptz,
+  latitude float8,
+  longitude float8,
+  distance_km float8
+)
+language sql
+as $$
+  select
+    l.id,
+    l.seller_id,
+    l.category_slug,
+    l.title,
+    l.description,
+    l.condition,
+    l.price,
+    l.old_price,
+    l.images,
+    l.is_active,
+    l.created_at,
+    ST_Y(l.location::geometry) as latitude,
+    ST_X(l.location::geometry) as longitude,
+    round((ST_Distance(l.location, ST_SetSRID(ST_MakePoint(lng, lat), 4326)::geography) / 1000.0)::numeric, 2)::float8 as distance_km
+  from public.listings l
+  where l.is_active = true
+    and ST_DWithin(l.location, ST_SetSRID(ST_MakePoint(lng, lat), 4326)::geography, radius_meters)
+  order by distance_km asc;
+$$;
+

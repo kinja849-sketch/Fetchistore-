@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Truck, MapPin, CheckCircle2, Clock, ArrowLeft, Navigation, ExternalLink, ShieldCheck, User } from "lucide-react";
+import { MapPin, ArrowLeft, ExternalLink, User } from "lucide-react";
 import { DeliveryControlPanel, OrderStatus } from "@/components/seller/delivery-control-panel";
 
 interface SellerOrder {

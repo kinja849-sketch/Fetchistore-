@@ -2,9 +2,9 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Search, SlidersHorizontal, MapPin, Heart, ShoppingBag } from "lucide-react";
 import { ConditionBadge } from "@/components/shared/condition-badge";
+import { flyImageToCart } from "@/lib/cart-fly-animation";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import { useListings, ListingItem } from "@/lib/listings-context";
@@ -94,16 +94,16 @@ export default function ShopPage() {
       </div>
 
       {/* Category Chips Bar */}
-      <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+      <div className="w-full min-w-0 flex flex-wrap items-center gap-1.5 sm:gap-2 py-1">
         {CATEGORIES.map((cat) => {
           const isActive = selectedCategory === cat.id;
           return (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
+              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
                 isActive
-                  ? "bg-[#8A9A5B] text-white shadow-sm scale-105"
+                  ? "bg-[#8A9A5B] text-white shadow-sm ring-2 ring-[#8A9A5B]/30 font-extrabold"
                   : "bg-[#F6F3F2] text-[#333333] hover:bg-[#E9EDC9] hover:text-[#5C6145]"
               }`}
             >
@@ -164,7 +164,7 @@ export default function ShopPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
           {filteredProducts.map((product) => {
             const isFav = isInWishlist(product.id);
 
@@ -212,7 +212,7 @@ export default function ShopPage() {
                     ${product.price.toFixed(2)}
                   </div>
                   <button
-                    onClick={() =>
+                    onClick={(e) => {
                       addItem({
                         id: product.id,
                         title: product.title,
@@ -220,8 +220,10 @@ export default function ShopPage() {
                         image: product.imageUrl,
                         condition: product.condition,
                         distance: product.distance,
-                      })
-                    }
+                      });
+                      const cardImg = e.currentTarget.closest(".group")?.querySelector("img");
+                      flyImageToCart({ sourceEl: cardImg || (e.currentTarget as HTMLElement), cartSelector: "#cart-fly-target-header" });
+                    }}
                     className="flex items-center space-x-1 bg-[#8A9A5B] hover:bg-[#56642B] text-white px-3 py-1.5 rounded-full text-xs font-bold transition-transform active:scale-95 shadow-xs cursor-pointer"
                   >
                     <ShoppingBag size={13} />

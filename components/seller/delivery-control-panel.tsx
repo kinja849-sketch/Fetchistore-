@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CheckCircle2, Truck, MapPin, PackageCheck, AlertCircle, Play, Navigation } from "lucide-react";
+import { CheckCircle2, Truck, MapPin, PackageCheck, Navigation } from "lucide-react";
 
 export type OrderStatus =
   | "pending"

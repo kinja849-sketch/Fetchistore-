@@ -22,7 +22,7 @@ export default function TrendingBanner() {
   };
 
   return (
-    <section className="w-full py-6 sm:py-10">
+    <section className="w-full py-6 sm:py-10 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Main Editorial Container */}

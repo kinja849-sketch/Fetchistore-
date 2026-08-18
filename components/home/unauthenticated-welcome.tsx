@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import { SignUpButton, SignInButton } from "@clerk/nextjs";
 
 export default function UnauthenticatedWelcome() {
   return (
@@ -26,7 +25,7 @@ export default function UnauthenticatedWelcome() {
             className="bg-cover bg-center w-full h-full absolute inset-0 transition-transform duration-700 group-hover:scale-105"
             style={{
               backgroundImage:
-                "url('https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80')",
+                "url('https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80')",
             }}
           />
         </div>
@@ -35,7 +34,7 @@ export default function UnauthenticatedWelcome() {
             className="bg-cover bg-center w-full h-full absolute inset-0 transition-transform duration-700 group-hover:scale-105"
             style={{
               backgroundImage:
-                "url('https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80')",
+                "url('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80')",
             }}
           />
         </div>

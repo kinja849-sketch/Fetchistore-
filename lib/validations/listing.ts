@@ -13,7 +13,8 @@ export const listingFormSchema = z.object({
   price: z.coerce.number().min(0.01, "Price must be greater than $0"),
   old_price: z.coerce.number().optional().nullable(),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
-  imageUrl: z.string().url("Please provide a valid image URL"),
+  imageUrl: z.string().min(1, "Please provide an image"),
+  images: z.array(z.string()).optional(),
   latitude: z.coerce.number().min(-90).max(90),
   longitude: z.coerce.number().min(-180).max(180),
 });

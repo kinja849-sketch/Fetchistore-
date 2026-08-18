@@ -20,11 +20,11 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
-    setMounted(true);
+    queueMicrotask(() => setMounted(true));
   }, []);
 
   // Derived user identity strictly from login or saved profile edit
-  const userLoginName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress?.split("@")[0];
+  const userLoginName = user?.fullName || user?.primaryEmailAddress?.emailAddress?.split("@")[0];
   const identityName = userProfile.fullName || userLoginName || "User";
   const currentAvatar = mounted ? userProfile.avatarUrl : "";
 

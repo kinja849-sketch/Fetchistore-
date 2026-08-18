@@ -6,7 +6,8 @@ import { useUser, SignUpButton, SignInButton } from "@clerk/nextjs";
 import { ArrowRight } from "lucide-react";
 
 export default function HeroSection() {
-  const { isSignedIn } = useUser();
+  const { user } = useUser();
+  const isSignedIn = !!user;
 
   return (
     <section className="relative w-full bg-[#FBF9F8] min-h-0 md:min-h-[580px] lg:min-h-[660px] flex flex-col justify-start md:justify-center overflow-hidden py-3 sm:py-6 md:py-16">

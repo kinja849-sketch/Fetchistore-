@@ -2,17 +2,16 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useListings } from "@/lib/listings-context";
 import { ConditionBadge } from "@/components/shared/condition-badge";
 import { useCart } from "@/lib/cart-context";
-import { ShoppingBag, ArrowLeft, SlidersHorizontal } from "lucide-react";
+import { ShoppingBag, SlidersHorizontal } from "lucide-react";
 
 export default function CategorySlugPage() {
   const params = useParams();
-  const router = useRouter();
   const rawSlug = (params.slug as string) || "fashion";
-  const { listings, searchListings } = useListings();
+  const { searchListings } = useListings();
   const { addItem } = useCart();
   const [selectedSub, setSelectedSub] = useState("all");
 
@@ -35,46 +34,34 @@ export default function CategorySlugPage() {
   }, [categoryProducts, selectedSub]);
 
   return (
-    <div className="w-full flex-1 bg-[#FBF9F8] text-[#1B1C1C] min-h-screen pb-24">
-      {/* Top Header Bar with Back Button */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#FBF9F8]/90 border-b border-[#E4E2E1]/60 h-16 flex items-center justify-between px-4 sm:px-6 transition-all duration-300">
-        <button
-          onClick={() => router.back()}
-          aria-label="Go back"
-          className="flex items-center justify-center p-2 rounded-full hover:bg-[#E4E2E1]/50 active:scale-95 transition-all text-[#56642B]"
-        >
-          <ArrowLeft size={22} />
-        </button>
-        <h1 className="text-lg font-extrabold text-[#56642B] tracking-tight flex-1 text-center pr-8 capitalize">
-          {categoryTitle} Collection
-        </h1>
-      </header>
-
-      <main className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
+    <div className="w-full flex-1 bg-[#FBF9F8] text-[#1B1C1C] min-h-screen pb-20 md:pb-8">
+      <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-extrabold text-[#1B1C1C]">
-              {categoryTitle} Items
-            </h2>
-            <p className="text-xs text-[#76786B]">
+            <h1 className="text-xl sm:text-3xl font-extrabold text-[#1B1C1C] capitalize">
+              {categoryTitle} Collection
+            </h1>
+            <p className="text-xs sm:text-sm text-[#76786B] font-semibold mt-0.5">
               {filteredProducts.length} items available in your area
             </p>
           </div>
-          <button className="flex items-center gap-1 text-xs font-bold text-[#56642B] bg-[#F0EDED] px-3.5 py-2 rounded-full border border-[#E4E2E1] hover:bg-[#E4E2E1] transition-colors">
-            <SlidersHorizontal size={14} />
-            Filter
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button className="flex items-center gap-1.5 text-xs font-bold text-[#56642B] bg-[#F0EDED] px-3.5 py-2 rounded-full border border-[#E4E2E1] hover:bg-[#E4E2E1] transition-colors cursor-pointer">
+              <SlidersHorizontal size={14} />
+              Filter
+            </button>
+          </div>
         </div>
 
         {/* Subcategory Filter Pills */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-none py-1">
+        <div className="w-full min-w-0 flex flex-wrap items-center gap-1.5 sm:gap-2 py-1">
           {["all", "new", "like_new", "good", "fair"].map((sub) => (
             <button
               key={sub}
               onClick={() => setSelectedSub(sub)}
-              className={`px-4 py-2 rounded-full text-xs font-extrabold capitalize whitespace-nowrap transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-extrabold capitalize whitespace-nowrap transition-all cursor-pointer ${
                 selectedSub === sub
-                  ? "bg-[#56642B] text-white shadow-sm"
+                  ? "bg-[#56642B] text-white shadow-sm ring-2 ring-[#56642B]/30"
                   : "bg-[#F0EDED] text-[#46483C] hover:bg-[#E4E2E1]"
               }`}
             >
@@ -94,17 +81,17 @@ export default function CategorySlugPage() {
             </p>
             <Link
               href="/seller/listings/create"
-              className="inline-block bg-[#56642B] text-white text-xs font-extrabold px-6 py-2.5 rounded-full hover:bg-[#253000] transition-all"
+              className="inline-block bg-[#56642B] text-white text-xs font-extrabold px-6 py-2.5 rounded-full hover:bg-[#253000] transition-all cursor-pointer"
             >
               + Create Listing
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
             {filteredProducts.map((prod) => (
               <div
                 key={prod.id}
-                className="bg-[#F6F3F2] rounded-3xl p-3 flex flex-col justify-between group hover:shadow-md transition-all border border-[#E4E2E1]/60"
+                className="bg-[#F6F3F2] rounded-3xl p-3 flex flex-col justify-between group hover:shadow-md transition-all border border-[#E4E2E1]/60 relative"
               >
                 <div>
                   <Link href={`/product/${prod.id}`} className="block">
@@ -114,7 +101,7 @@ export default function CategorySlugPage() {
                         alt={prod.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute top-2 left-2">
+                      <div className="absolute top-2 left-2 z-10">
                         <ConditionBadge condition={prod.condition} />
                       </div>
                     </div>
@@ -131,7 +118,7 @@ export default function CategorySlugPage() {
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-[#E4E2E1] mt-2">
-                  <span className="text-xs font-extrabold text-[#56642B]">
+                  <span className="text-xs sm:text-sm font-extrabold text-[#56642B]">
                     ${prod.price.toFixed(2)}
                   </span>
                   <button
@@ -145,7 +132,7 @@ export default function CategorySlugPage() {
                         distance: prod.distance || `${prod.distanceKm} km away`,
                       })
                     }
-                    className="p-1.5 bg-[#8A9A5B] hover:bg-[#56642B] text-white rounded-full transition-transform active:scale-95 cursor-pointer"
+                    className="p-1.5 sm:p-2 bg-[#8A9A5B] hover:bg-[#56642B] text-white rounded-full transition-transform active:scale-95 cursor-pointer shadow-xs"
                     aria-label="Add to cart"
                   >
                     <ShoppingBag size={14} />

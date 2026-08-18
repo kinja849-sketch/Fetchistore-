@@ -11,7 +11,7 @@ export default function CollectionBanners() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Collection 1 */}
-          <Link href="/collections/new" className="block">
+          <Link href="/shop?condition=new" className="block">
             <div className="relative h-[300px] sm:h-[400px] rounded-[12px] overflow-hidden group cursor-pointer">
               <Image
                 src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=800&h=600&fit=crop&q=80"
@@ -33,7 +33,7 @@ export default function CollectionBanners() {
           </Link>
 
           {/* Collection 2 */}
-          <Link href="/collections/pre-loved" className="block">
+          <Link href="/shop?condition=good" className="block">
             <div className="relative h-[300px] sm:h-[400px] rounded-[12px] overflow-hidden group cursor-pointer">
               <Image
                 src="https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&h=600&fit=crop&q=80"

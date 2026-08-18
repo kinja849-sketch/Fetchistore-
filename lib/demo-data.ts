@@ -14,6 +14,7 @@ export interface Product {
   condition: ProductCondition;
   imageSrc: string;
   distance: number; // km
+  category?: string;
 }
 
 export interface Category {

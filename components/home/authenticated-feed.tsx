@@ -1,10 +1,18 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
 import { useWishlist } from "@/lib/wishlist-context";
+import { useCart } from "@/lib/cart-context";
+import { flyImageToCart } from "@/lib/cart-fly-animation";
 import { useListings, ListingItem } from "@/lib/listings-context";
+import { GoogleMap } from "@/components/maps/google-map";
+import { useUserLocation } from "@/lib/hooks/use-user-location";
+import { PlacesAutocomplete } from "@/components/maps/places-autocomplete";
+import { getNearbyListingsAction, NearbyListingItem } from "@/app/actions/geo";
+import { Coordinates } from "@/lib/geo";
+import { formatPrice } from "@/lib/currency";
+import { Navigation } from "lucide-react";
 
 const PROMO_BANNERS = [
   {
@@ -27,7 +35,7 @@ const PROMO_BANNERS = [
     id: "banner-3",
     tag: "Pre-loved Vintage",
     tagBg: "bg-[#56642B]/90",
-    title: "Streetwear Drops \n& Classics",
+    title: "Streetwear Drops \nClassics",
     image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80",
     link: "/shop?category=mens-outfit",
   },
@@ -42,20 +50,76 @@ const PROMO_BANNERS = [
 ];
 
 export default function AuthenticatedFeed() {
-  const { user } = useUser();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const { listings } = useListings();
+  const { addItem } = useCart();
+  const { listings: contextListings } = useListings();
 
+  const handleAddToCartCard = (product: any, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      quantity: 1,
+      image: product.imageUrl,
+      condition: product.condition,
+      distance: `${product.distanceKm}km away`,
+    });
+    const cardImg = e.currentTarget.closest(".group")?.querySelector("img");
+    flyImageToCart({ sourceEl: cardImg || (e.currentTarget as HTMLElement), cartSelector: "#cart-fly-target-header" });
+  };
+  const {
+    location: userLocation,
+    cityLabel: autoCityLabel,
+    currencyConfig,
+    status: locStatus,
+    refreshLocation,
+  } = useUserLocation();
+
+  const [customLocation, setCustomLocation] = useState<Coordinates | null>(null);
+  const [customCityLabel, setCustomCityLabel] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [maxDistance, setMaxDistance] = useState(20);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showMapView, setShowMapView] = useState(false);
+  const [nearbyListings, setNearbyListings] = useState<NearbyListingItem[]>([]);
+
+  const activeLocation = customLocation || userLocation;
+  const currentCity = customCityLabel || autoCityLabel || "Near You";
 
   // Drag-to-scroll & carousel navigation states
   const carouselRef = useRef<HTMLDivElement>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+
+  // Fetch real nearby listings when active location or maxDistance changes
+  useEffect(() => {
+    let ignore = false;
+    async function fetchNearby() {
+      if (!activeLocation) {
+        if (!ignore) setNearbyListings([]);
+        return;
+      }
+
+      try {
+        const res = await getNearbyListingsAction(activeLocation.lat, activeLocation.lng, maxDistance);
+        if (!ignore && res.data) {
+          setNearbyListings(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch nearby listings:", err);
+      }
+    }
+
+    fetchNearby();
+    return () => {
+      ignore = true;
+    };
+  }, [activeLocation, maxDistance]);
 
   const scrollCarousel = (direction: "left" | "right") => {
     if (carouselRef.current) {
@@ -104,7 +168,7 @@ export default function AuthenticatedFeed() {
     });
   };
 
-  const filteredProducts = listings.filter((product) => {
+  const filteredProducts = contextListings.filter((product) => {
     const q = searchQuery.trim().toLowerCase();
     const matchesSearch =
       !q ||
@@ -122,26 +186,114 @@ export default function AuthenticatedFeed() {
 
   return (
     <div className="w-full flex-1 flex flex-col space-y-6 p-4 sm:p-6 lg:p-8 bg-[#FBF9F8]">
-      {/* Search & Filter Bar */}
-      <div className="relative w-full">
-        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#76786B]">
-          <span className="material-symbols-outlined text-[20px]">search</span>
+      {/* Consolidated Primary Search & Compact Location Chip */}
+      <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+        {/* Single Item Search Field */}
+        <div className="relative flex-1 w-full">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#76786B]">
+            <span className="material-symbols-outlined text-[20px]">search</span>
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={`Search items near ${currentCity}...`}
+            className="w-full bg-[#F0EDED] text-[#1B1C1C] text-sm font-medium py-3 pl-10 pr-12 rounded-full border border-transparent focus:border-[#8A9A5B] focus:bg-white focus:outline-none transition-all placeholder:text-[#76786B]"
+          />
+          <button
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#56642B] active:scale-95 transition-transform cursor-pointer"
+            aria-label="Toggle Filter Options"
+            title="Filter by distance or category"
+          >
+            <span className="material-symbols-outlined text-[22px]">tune</span>
+          </button>
         </div>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search items near Portland, OR..."
-          className="w-full bg-[#F0EDED] text-[#1B1C1C] text-sm font-medium py-3 pl-10 pr-10 rounded-full border border-transparent focus:border-[#8A9A5B] focus:bg-white focus:outline-none transition-all placeholder:text-[#76786B]"
-        />
-        <button
-          onClick={() => setIsFilterOpen(!isFilterOpen)}
-          className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#56642B] active:scale-95 transition-transform cursor-pointer"
-          aria-label="Toggle Filter Options"
-        >
-          <span className="material-symbols-outlined text-[22px]">tune</span>
-        </button>
+
+        {/* Compact Location Selector Chip */}
+        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-between sm:justify-start">
+          <button
+            type="button"
+            onClick={() => setShowLocationModal(true)}
+            className="px-4 py-2.5 bg-[#8A9A5B]/15 hover:bg-[#8A9A5B]/25 text-[#56642B] rounded-full text-xs font-bold transition-all flex items-center gap-1.5 border border-[#8A9A5B]/30 cursor-pointer shadow-xs"
+            title="Click to change location or search address"
+          >
+            <span className="material-symbols-outlined text-sm">location_on</span>
+            <span className="truncate max-w-[130px] sm:max-w-[160px]">Near {currentCity}</span>
+            <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setCustomLocation(null);
+              setCustomCityLabel(null);
+              refreshLocation();
+            }}
+            className="p-2.5 bg-[#8A9A5B]/15 hover:bg-[#8A9A5B]/30 text-[#56642B] rounded-full transition-colors shrink-0 cursor-pointer"
+            title="Reset to device GPS / IP location"
+          >
+            <Navigation size={16} className={locStatus === "loading" ? "animate-spin" : ""} />
+          </button>
+        </div>
       </div>
+
+      {/* Location Override Popover/Modal */}
+      {showLocationModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FBF9F8] rounded-3xl p-5 max-w-md w-full shadow-2xl border border-[#E4E2E1] space-y-4 animate-fade-in-up">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#56642B]">location_on</span>
+                <h3 className="text-sm font-extrabold text-[#1B1C1C]">Change Search Area</h3>
+              </div>
+              <button
+                onClick={() => setShowLocationModal(false)}
+                className="text-xs font-bold text-[#76786B] hover:text-[#1B1C1C] cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-[#46483C]">
+              Search a city or address to view nearby items outside your current auto-detected location.
+            </p>
+
+            <PlacesAutocomplete
+              onPlaceSelect={(coords, label) => {
+                setCustomLocation(coords);
+                setCustomCityLabel(label.split(",")[0]);
+                setShowLocationModal(false);
+              }}
+              placeholder="Search address or city..."
+            />
+
+            <div className="pt-2 flex justify-between items-center text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomLocation(null);
+                  setCustomCityLabel(null);
+                  refreshLocation();
+                  setShowLocationModal(false);
+                }}
+                className="text-[#56642B] font-extrabold hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <Navigation size={14} />
+                Use Auto GPS / IP Location
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowLocationModal(false)}
+                className="px-4 py-1.5 bg-[#F0EDED] text-[#1B1C1C] rounded-full font-bold hover:bg-[#E4E2E1] transition-colors cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filter Modal Drawer */}
       {isFilterOpen && (
@@ -160,7 +312,7 @@ export default function AuthenticatedFeed() {
 
           <div>
             <div className="flex justify-between text-xs font-bold text-[#1B1C1C] mb-1">
-              <span>Max Distance</span>
+              <span>Max Radius</span>
               <span>{maxDistance} km</span>
             </div>
             <input
@@ -176,7 +328,7 @@ export default function AuthenticatedFeed() {
       )}
 
       {/* Promotional Banners Carousel Section */}
-      <section className="relative group">
+      <section className="relative group overflow-hidden w-full max-w-full">
         <button
           onClick={() => scrollCarousel("left")}
           className="absolute left-1 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/90 shadow-md text-[#1B1C1C] hover:bg-[#56642B] hover:text-white transition-all flex items-center justify-center cursor-pointer border border-[#E4E2E1]"
@@ -208,7 +360,7 @@ export default function AuthenticatedFeed() {
             <Link
               key={banner.id}
               href={banner.link}
-              className="snap-center shrink-0 w-[80vw] sm:w-[320px] md:w-[360px] h-40 relative rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-shadow group/card"
+              className="snap-center shrink-0 w-[82vw] sm:w-[320px] md:w-[360px] h-40 relative rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-shadow group/card"
             >
               <div
                 className="absolute inset-0 bg-cover bg-center w-full h-full group-hover/card:scale-105 transition-transform duration-500"
@@ -229,12 +381,15 @@ export default function AuthenticatedFeed() {
       </section>
 
       {/* Category Navigation Pills */}
-      <section className="flex items-center justify-between sm:justify-start sm:gap-8 pt-1 overflow-x-auto scrollbar-hide pb-1">
+      <section className="w-full min-w-0 grid grid-cols-4 sm:grid-cols-8 gap-2 sm:gap-4 md:gap-6 py-2">
         {[
           { name: "All", slug: "all", icon: "apps" },
-          { name: "Fashion", slug: "fashion", icon: "checkroom" },
-          { name: "Furniture", slug: "furniture", icon: "chair" },
           { name: "Electronics", slug: "electronics", icon: "devices" },
+          { name: "Fashion", slug: "fashion", icon: "checkroom" },
+          { name: "Men's Outfit", slug: "mens-outfit", icon: "strikethrough_s" },
+          { name: "Women's Outfit", slug: "womens-outfit", icon: "woman" },
+          { name: "Furniture", slug: "furniture", icon: "chair" },
+          { name: "Footwear", slug: "footwear", icon: "steps" },
           { name: "Decor", slug: "home decor", icon: "potted_plant" },
         ].map((cat) => {
           const isActive = selectedCategory === cat.slug;
@@ -242,19 +397,19 @@ export default function AuthenticatedFeed() {
             <button
               key={cat.name}
               onClick={() => setSelectedCategory(cat.slug)}
-              className="flex flex-col items-center gap-1.5 group cursor-pointer shrink-0"
+              className="flex flex-col items-center justify-center gap-1.5 group cursor-pointer w-full py-1"
             >
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all ${
                   isActive
-                    ? "bg-[#56642B] text-white shadow-sm scale-105"
+                    ? "bg-[#56642B] text-white shadow-sm ring-2 ring-[#56642B]/30 font-bold"
                     : "bg-[#F0EDED] text-[#5C6145] hover:bg-[#8A9A5B]/20"
                 }`}
               >
-                <span className="material-symbols-outlined text-[20px]">{cat.icon}</span>
+                <span className="material-symbols-outlined text-[19px] sm:text-[20px]">{cat.icon}</span>
               </div>
               <span
-                className={`text-[11px] font-semibold ${
+                className={`text-[10px] sm:text-[11px] font-semibold text-center truncate max-w-full ${
                   isActive ? "text-[#56642B] font-bold" : "text-[#46483C]"
                 }`}
               >
@@ -265,10 +420,26 @@ export default function AuthenticatedFeed() {
         })}
       </section>
 
-      {/* Product Grid Section */}
+      {/* Product Grid Section with Map View Toggle */}
       <section className="space-y-3 pt-2">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-bold text-[#1B1C1C]">Trending Near You</h3>
+          <div className="flex items-center space-x-3">
+            <h3 className="text-lg font-bold text-[#1B1C1C]">Trending Near You</h3>
+            <button
+              type="button"
+              onClick={() => setShowMapView(!showMapView)}
+              className={`text-xs font-bold px-3 py-1 rounded-full border transition-all flex items-center gap-1 cursor-pointer ${
+                showMapView
+                  ? "bg-[#56642B] text-white border-[#56642B]"
+                  : "bg-[#8A9A5B]/15 text-[#56642B] border-[#8A9A5B]/30 hover:bg-[#8A9A5B]/30"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[15px]">
+                {showMapView ? "grid_view" : "map"}
+              </span>
+              <span>{showMapView ? "Grid View" : "Map View"}</span>
+            </button>
+          </div>
           <Link
             href="/shop"
             className="text-xs font-bold text-[#56642B] hover:underline"
@@ -277,7 +448,43 @@ export default function AuthenticatedFeed() {
           </Link>
         </div>
 
-        {filteredProducts.length === 0 ? (
+        {showMapView ? (
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-[#76786B] flex items-center justify-between px-1">
+              <span>Interactive Map: {nearbyListings.length} items within radius</span>
+              {activeLocation && (
+                <span className="bg-[#1B1C1C] text-[#D9EAA3] px-2.5 py-1 rounded-xl font-mono font-bold text-[11px] shadow-xs">
+                  {activeLocation.lat.toFixed(4)}°, {activeLocation.lng.toFixed(4)}°
+                </span>
+              )}
+            </div>
+            <GoogleMap
+              center={activeLocation}
+              zoom={13}
+              height="h-96"
+              interactive={true}
+              onRetryLocation={refreshLocation}
+              markers={[
+                ...(activeLocation
+                  ? [
+                      {
+                        id: "user-current-pos",
+                        position: activeLocation,
+                        title: `Your Location (${currentCity})`,
+                        type: "user" as const,
+                      },
+                    ]
+                  : []),
+                ...nearbyListings.map((p) => ({
+                  id: p.id,
+                  position: { lat: p.lat, lng: p.lng },
+                  title: `${p.title} — ${formatPrice(p.price, currencyConfig)} (${p.distance.toFixed(1)} km away)`,
+                  type: "listing" as const,
+                })),
+              ]}
+            />
+          </div>
+        ) : filteredProducts.length === 0 ? (
           <div className="py-12 text-center text-[#76786B] text-sm">
             No items found matching your filter criteria. Try searching or expanding distance.
           </div>
@@ -287,14 +494,15 @@ export default function AuthenticatedFeed() {
               <Link
                 key={product.id}
                 href={`/product/${product.id}`}
-                className="bg-[#F6F3F2] rounded-3xl p-2.5 flex flex-col gap-2 relative group hover:shadow-md transition-all border border-[#E4E2E1]/60"
+                className="bg-[#F6F3F2] rounded-3xl p-2.5 flex flex-col gap-2 relative group hover:shadow-md transition-all border border-[#E4E2E1]/60 cursor-pointer min-w-0"
               >
                 <button
                   onClick={(e) => toggleFavorite(product, e)}
-                  className="absolute top-4 right-4 z-10 w-7 h-7 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-[#56642B] hover:bg-[#56642B] hover:text-white transition-colors shadow-xs cursor-pointer"
+                  aria-label="Toggle wishlist"
+                  className="absolute top-3.5 right-3.5 z-20 w-7 h-7 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-[#56642B] hover:bg-[#56642B] hover:text-white transition-all shadow-xs cursor-pointer active:scale-95"
                 >
                   <span
-                    className="material-symbols-outlined text-[16px]"
+                    className="material-symbols-outlined text-[15px]"
                     style={{
                       fontVariationSettings: isInWishlist(product.id)
                         ? "'FILL' 1"
@@ -305,13 +513,22 @@ export default function AuthenticatedFeed() {
                   </span>
                 </button>
 
+                <button
+                  onClick={(e) => handleAddToCartCard(product, e)}
+                  aria-label="Add to cart"
+                  title="Add to cart"
+                  className="absolute top-3.5 left-3.5 z-20 w-7 h-7 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-[#56642B] hover:bg-[#56642B] hover:text-white transition-all shadow-xs cursor-pointer active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-[15px]">shopping_bag</span>
+                </button>
+
                 <div className="w-full aspect-[4/5] rounded-2xl overflow-hidden bg-[#E4E2E1] relative">
                   <img
                     src={product.imageUrl}
                     alt={product.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute bottom-2 left-2 flex flex-wrap gap-1">
+                  <div className="absolute bottom-2 left-2 z-10 flex flex-wrap gap-1 max-w-[calc(100%-16px)]">
                     <span className="text-[9px] font-extrabold uppercase bg-white/90 text-[#1B1C1C] px-2 py-0.5 rounded-full shadow-xs">
                       {product.condition === "new"
                         ? "New"
@@ -330,24 +547,34 @@ export default function AuthenticatedFeed() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-0.5 px-1">
-                  <h4 className="text-xs font-bold text-[#1B1C1C] line-clamp-1">
+                <div className="flex flex-col gap-0.5 px-0.5">
+                  <h4 className="text-xs sm:text-sm font-extrabold text-[#1B1C1C] line-clamp-1 group-hover:text-[#56642B] transition-colors">
                     {product.title}
                   </h4>
                   <div className="flex items-center gap-1 text-[#76786B]">
                     <span
-                      className="material-symbols-outlined text-[14px] text-[#7D562D]"
+                      className="material-symbols-outlined text-[13px] text-[#7D562D]"
                       style={{ fontVariationSettings: "'FILL' 1" }}
                     >
                       star
                     </span>
-                    <span className="text-[10px] font-semibold">
+                    <span className="text-[10px] sm:text-[11px] font-semibold">
                       4.9 (42)
                     </span>
                   </div>
-                  <span className="text-sm font-extrabold text-[#56642B] mt-0.5">
-                    ${product.price.toFixed(2)}
-                  </span>
+                  <div className="flex items-center justify-between mt-0.5 pt-1 border-t border-[#E4E2E1]/60">
+                    <span className="text-xs sm:text-sm font-extrabold text-[#56642B]">
+                      {formatPrice(product.price, currencyConfig)}
+                    </span>
+                    <button
+                      onClick={(e) => handleAddToCartCard(product, e)}
+                      aria-label="Add to cart"
+                      className="text-[10px] font-bold bg-[#8A9A5B] hover:bg-[#56642B] text-white px-2.5 py-0.5 rounded-full transition-all flex items-center gap-0.5 cursor-pointer shadow-xs active:scale-95"
+                    >
+                      <span className="material-symbols-outlined text-[12px]">add</span>
+                      <span>Add</span>
+                    </button>
+                  </div>
                 </div>
               </Link>
             ))}

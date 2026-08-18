@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { getListings, createListing } from "@/app/actions/listings";
 
 export type ProductCondition = "new" | "like_new" | "good" | "fair";
 
@@ -14,99 +15,23 @@ export interface ListingItem {
   distanceKm: number;
   distance: string;
   imageUrl: string;
+  images?: string[];
   description: string;
   location: string;
   createdAt: string;
   isSellerItem?: boolean;
 }
 
-const INITIAL_DEMO_LISTINGS: ListingItem[] = [
-  {
-    id: "demo-phone-1",
-    title: "iPhone 15 Pro - 256GB Natural Titanium",
-    category: "electronics",
-    price: 850.0,
-    oldPrice: 999.0,
-    condition: "like_new",
-    distanceKm: 0.5,
-    distance: "0.5 km away",
-    imageUrl: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600&auto=format&fit=crop&q=80",
-    description: "Flawless condition iPhone 15 Pro, battery health 98%. Comes with original USB-C cable and box.",
-    location: "Portland, OR",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "urban-vanguard-tee",
-    title: "Urban Vanguard Tee",
-    category: "mens-outfit",
-    price: 26.72,
-    oldPrice: 35.0,
-    condition: "new",
-    distanceKm: 0.8,
-    distance: "0.8 km away",
-    imageUrl: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80",
-    description: "100% organic heavy cotton oversized t-shirt in washed olive.",
-    location: "Greenpoint, NY",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "grey-casual-shoe",
-    title: "Grey Casual Sneakers",
-    category: "footwear",
-    price: 120.0,
-    oldPrice: 150.0,
-    condition: "like_new",
-    distanceKm: 1.2,
-    distance: "1.2 km away",
-    imageUrl: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=600&auto=format&fit=crop&q=80",
-    description: "Worn twice indoors. Extremely comfortable cushioned soles.",
-    location: "Greenpoint, NY",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "classic-suede-jacket",
-    title: "Classic Suede Jacket",
-    category: "mens-outfit",
-    price: 210.0,
-    condition: "good",
-    distanceKm: 2.8,
-    distance: "2.8 km away",
-    imageUrl: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&auto=format&fit=crop&q=80",
-    description: "Authentic vintage suede leather jacket with warm inner lining.",
-    location: "Brooklyn, NY",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "minimalist-ceramic-vase",
-    title: "Minimalist Sculptural Ceramic Vase",
-    category: "home-decor",
-    price: 42.0,
-    condition: "new",
-    distanceKm: 2.1,
-    distance: "2.1 km away",
-    imageUrl: "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=600&auto=format&fit=crop&q=80",
-    description: "Handcrafted matte ceramic vase, perfect for dried florals.",
-    location: "Portland, OR",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "studio-anc-headphones",
-    title: "Studio Wireless ANC Headphones",
-    category: "electronics",
-    price: 145.0,
-    condition: "like_new",
-    distanceKm: 3.5,
-    distance: "3.5 km away",
-    imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80",
-    description: "Active Noise Cancelling over-ear headphones with 30-hour battery life.",
-    location: "Portland, OR",
-    createdAt: new Date().toISOString(),
-  },
-];
+export interface AddListingInput extends Omit<ListingItem, "id" | "createdAt"> {
+  latitude?: number;
+  longitude?: number;
+}
 
 interface ListingsContextType {
   listings: ListingItem[];
-  addListing: (newListing: Omit<ListingItem, "id" | "createdAt">) => ListingItem;
+  loading: boolean;
+  refreshListings: () => Promise<void>;
+  addListing: (newListing: AddListingInput, activeUserId?: string) => Promise<{ data: ListingItem | null; error: string | null }>;
   getListingById: (id: string) => ListingItem | undefined;
   searchListings: (query: string, category?: string) => ListingItem[];
 }
@@ -114,40 +39,88 @@ interface ListingsContextType {
 const ListingsContext = createContext<ListingsContextType | undefined>(undefined);
 
 export function ListingsProvider({ children }: { children: React.ReactNode }) {
-  const [listings, setListings] = useState<ListingItem[]>(INITIAL_DEMO_LISTINGS);
+  const [listings, setListings] = useState<ListingItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("fetchistore_user_listings");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setListings(parsed);
-          }
-        } catch {
-          // fallback to initial demo listings
+    let ignore = false;
+    async function loadData() {
+      setLoading(true);
+      try {
+        const res = await getListings();
+        if (!ignore && res.data) {
+          const mapped: ListingItem[] = res.data.map((prod) => ({
+            id: prod.id,
+            title: prod.title,
+            category: prod.category || "general",
+            price: prod.price,
+            oldPrice: prod.oldPrice,
+            condition: prod.condition,
+            distanceKm: prod.distance,
+            distance: `${prod.distance} km away`,
+            imageUrl: prod.imageSrc,
+            description: prod.description,
+            location: "Near you",
+            createdAt: new Date().toISOString(),
+          }));
+          setListings(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to load listings from Supabase:", err);
+      } finally {
+        if (!ignore) {
+          setLoading(false);
         }
       }
     }
+    loadData();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("fetchistore_user_listings", JSON.stringify(listings));
+  const addListing = async (
+    item: AddListingInput,
+    activeUserId?: string
+  ): Promise<{ data: ListingItem | null; error: string | null }> => {
+    const res = await createListing(
+      {
+        title: item.title,
+        description: item.description,
+        category_id: item.category,
+        condition: item.condition,
+        price: item.price,
+        old_price: item.oldPrice,
+        quantity: 1,
+        imageUrl: item.imageUrl,
+        images: item.images,
+        latitude: item.latitude ?? 45.5152,
+        longitude: item.longitude ?? -122.6784,
+      },
+      activeUserId
+    );
+
+    if (res.data) {
+      const createdItem: ListingItem = {
+        id: res.data.id,
+        title: res.data.title,
+        category: res.data.category || item.category,
+        price: res.data.price,
+        oldPrice: res.data.oldPrice,
+        condition: res.data.condition,
+        distanceKm: res.data.distance,
+        distance: `${res.data.distance} km away`,
+        imageUrl: res.data.imageSrc,
+        description: res.data.description,
+        location: item.location || "Near you",
+        createdAt: new Date().toISOString(),
+        isSellerItem: true,
+      };
+      setListings((prev) => [createdItem, ...prev.filter((p) => p.id !== createdItem.id)]);
+      return { data: createdItem, error: null };
     }
-  }, [listings]);
 
-  const addListing = (item: Omit<ListingItem, "id" | "createdAt">): ListingItem => {
-    const newListing: ListingItem = {
-      ...item,
-      id: `listing-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      isSellerItem: true,
-    };
-
-    setListings((prev) => [newListing, ...prev]);
-    return newListing;
+    return { data: null, error: res.error || "Failed to create listing" };
   };
 
   const getListingById = (id: string) => {
@@ -161,15 +134,14 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
 
     if (cat === target) return true;
     
-    // Normalize aliases
     const aliases: Record<string, string[]> = {
       fashion: ["fashion", "mens-outfit", "womens-outfit", "clothing", "apparel"],
       electronics: ["electronics", "tech", "phones", "gadgets"],
       "home-decor": ["home-decor", "home decor", "decor", "furniture", "home"],
       footwear: ["footwear", "shoes", "sneakers"],
       accessories: ["accessories", "bags", "jewelry"],
-      furniture: ["furniture", "home-decor", "decor"],
-      books: ["books", "media"],
+      fitness: ["fitness", "sports", "workout"],
+      beauty: ["beauty", "skincare", "cosmetics"],
     };
 
     for (const [, list] of Object.entries(aliases)) {
@@ -196,10 +168,40 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const refreshListings = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await getListings();
+      if (res.data) {
+        const mapped: ListingItem[] = res.data.map((prod) => ({
+          id: prod.id,
+          title: prod.title,
+          category: prod.category || "general",
+          price: prod.price,
+          oldPrice: prod.oldPrice,
+          condition: prod.condition,
+          distanceKm: prod.distance,
+          distance: `${prod.distance} km away`,
+          imageUrl: prod.imageSrc,
+          description: prod.description,
+          location: "Near you",
+          createdAt: new Date().toISOString(),
+        }));
+        setListings(mapped);
+      }
+    } catch (err) {
+      console.error("Failed to refresh listings from Supabase:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return (
     <ListingsContext.Provider
       value={{
         listings,
+        loading,
+        refreshListings,
         addListing,
         getListingById,
         searchListings,

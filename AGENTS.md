@@ -151,7 +151,7 @@ UI prompts must also reference Clarkson structure + NovaTrend visual language.
 | **Website / UI** | Pages, cards, cart, map, chat UI | Hold secrets, bypass RLS, call Stripe secret API |
 | **API / Server Actions** | Validation, authz, thin orchestration | Heavy UI logic |
 | **Database** | Supabase Postgres + PostGIS + Storage + Realtime | Service role from browser |
-| **Auth** | Supabase Auth only | Clerk or other auth providers |
+| **Auth** | Clerk Auth (@clerk/nextjs) | Bypass authentication bounds |
 | **Payments** | Stripe + flows for bank / e-wallet / COD | Expose secret keys |
 | **Delivery** | Status machine, live location, alerts | Track location outside active delivery window |
 | **Chat** | Order-scoped threads | Open messaging between arbitrary users |
@@ -166,7 +166,7 @@ UI displays stored data. Privileged writes go through Server Actions or verified
 | --- | --- | --- | --- |
 | Framework | Next.js (App Router) + React + TypeScript | React e-commerce app with solid server boundaries | Vercel hobby |
 | Styling | Tailwind CSS + shadcn/ui | Clarkson structure + NovaTrend look | Free |
-| Auth | Supabase Auth | No Clerk | Free MAU tier |
+| Auth | Clerk Auth (@clerk/nextjs) | User-mandated authentication standard | Free MAU tier |
 | DB / Storage | Supabase Postgres + PostGIS + Storage | Listings, orders, images, distance | Free tier |
 | Realtime | Supabase Realtime | Live location + chat + status | Included |
 | Maps | Leaflet + react-leaflet (or MapLibre) | Delivery map + nearby UI | Free OSM tiles |
@@ -176,7 +176,7 @@ UI displays stored data. Privileged writes go through Server Actions or verified
 | Icons | lucide-react | UI consistency | Free |
 | Hosting | Vercel | Next.js native | Hobby free |
 
-**Forbidden:** Clerk as primary auth; local JSON as source of truth; separate Express/Nest backend; paid-only services required for MVP.
+**Forbidden:** Local JSON as source of truth; separate Express/Nest backend; paid-only services required for MVP.
 
 ---
 

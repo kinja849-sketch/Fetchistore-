@@ -54,7 +54,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       try {
         const saved = localStorage.getItem("fetchistore_cart");
-        if (saved) setItems(JSON.parse(saved));
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          queueMicrotask(() => setItems(parsed));
+        }
       } catch {
         // Ignore JSON parse error
       }

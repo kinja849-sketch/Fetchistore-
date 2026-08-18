@@ -20,7 +20,7 @@ export default function SettingsAndPrivacyPage() {
   const { userProfile, updateProfile } = useAuth();
 
   const [fullName, setFullName] = useState(
-    userProfile.fullName || user?.fullName || user?.username || ""
+    userProfile.fullName || user?.fullName || user?.primaryEmailAddress?.emailAddress?.split("@")[0] || ""
   );
   const [location, setLocation] = useState(userProfile.location || "Greenpoint, NY");
   const [preferredRadius, setPreferredRadius] = useState<number>(userProfile.radiusKm || 10);
@@ -33,7 +33,7 @@ export default function SettingsAndPrivacyPage() {
     promotions: false,
   });
 
-  const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || "";
+  const userEmail = user?.primaryEmailAddress?.emailAddress || "";
 
   const handleSaveAccount = (e: React.FormEvent) => {
     e.preventDefault();

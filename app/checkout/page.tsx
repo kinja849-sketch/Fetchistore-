@@ -5,25 +5,30 @@ import { useRouter } from "next/navigation";
 import { CreditCard, Landmark, Wallet, Banknote, ShieldCheck, MapPin, Truck, CheckCircle2 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 
-import { useAuth } from "@/lib/supabase/auth-context";
 import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/lib/supabase/auth-context";
+import { MapPinPicker } from "@/components/maps/map-pin-picker";
+import { Coordinates, DEFAULT_COORDINATES } from "@/lib/geo";
+
+import { createOrder } from "@/app/actions/orders";
 
 type PaymentMethod = "stripe" | "bank_transfer" | "ewallet" | "cod";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, subtotal, deliveryFee, totalPrice, clearCart } = useCart();
-  const { userProfile } = useAuth();
   const { user } = useUser();
+  const { userProfile } = useAuth();
 
   const authenticatedName =
     userProfile.fullName ||
     user?.fullName ||
-    user?.username ||
     user?.primaryEmailAddress?.emailAddress?.split("@")[0] ||
     "Delivery Recipient";
   
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("stripe");
+  const [showPinPicker, setShowPinPicker] = useState(false);
+  const [deliveryCoords, setDeliveryCoords] = useState<Coordinates>(DEFAULT_COORDINATES);
   const [address, setAddress] = useState({
     fullName: authenticatedName,
     street: "742 Evergreen Terrace",
@@ -33,15 +38,41 @@ export default function CheckoutPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    try {
+      const activeUserId = user?.id || "demo-buyer-1";
+      const orderItems = items.map((item) => ({
+        listingId: item.id,
+        quantity: item.quantity,
+        unitPrice: item.price,
+      }));
+
+      const res = await createOrder({
+        buyerId: activeUserId,
+        sellerId: "demo-seller-1",
+        paymentMethod: selectedMethod,
+        total: totalPrice,
+        deliveryAddress: address,
+        items: orderItems,
+      });
+
       clearCart();
       setIsSubmitting(false);
-      router.push("/orders/ord_101");
-    }, 1200);
+
+      if (res.orderId) {
+        router.push(`/orders/${res.orderId}`);
+      } else {
+        router.push("/orders");
+      }
+    } catch (err) {
+      console.error("Order error:", err);
+      clearCart();
+      setIsSubmitting(false);
+      router.push("/orders");
+    }
   };
 
   return (
@@ -64,12 +95,37 @@ export default function CheckoutPage() {
           
           {/* Section 1: Delivery Address */}
           <div className="bg-white border border-gray-100 rounded-3xl p-6 space-y-4 shadow-sm">
-            <div className="flex items-center space-x-2 border-b border-gray-100 pb-3">
-              <MapPin className="text-brand" size={20} />
-              <h2 className="text-base font-extrabold text-gray-900">
-                Buyer Delivery Address
-              </h2>
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center space-x-2">
+                <MapPin className="text-[#56642B]" size={20} />
+                <h2 className="text-base font-extrabold text-gray-900">
+                  Buyer Delivery Address & Door Pin
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPinPicker(true)}
+                className="text-xs font-extrabold text-[#161F00] bg-[#8A9A5B] hover:bg-[#56642B] hover:text-white px-3 py-1.5 rounded-full transition-all flex items-center space-x-1 shadow-xs"
+              >
+                <MapPin size={14} />
+                <span>Adjust Pin Location</span>
+              </button>
             </div>
+
+            {showPinPicker && (
+              <MapPinPicker
+                initialCoordinates={deliveryCoords}
+                onSelectCoordinates={(coords) => {
+                  setDeliveryCoords(coords);
+                  setAddress((prev) => ({
+                    ...prev,
+                    street: `GPS Pin: ${coords.lat.toFixed(4)}°, ${coords.lng.toFixed(4)}°`,
+                  }));
+                }}
+                onClose={() => setShowPinPicker(false)}
+                title="Select Delivery Pin Location"
+              />
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div>
@@ -131,12 +187,41 @@ export default function CheckoutPage() {
 
           {/* Section 2: Payment Method (Multi-Payment) */}
           <div className="bg-white border border-gray-100 rounded-3xl p-6 space-y-4 shadow-sm">
-            <div className="flex items-center space-x-2 border-b border-gray-100 pb-3">
-              <CreditCard className="text-brand" size={20} />
-              <h2 className="text-base font-extrabold text-gray-900">
-                Payment Method
-              </h2>
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center space-x-2">
+                <MapPin className="text-brand" size={20} />
+                <h2 className="text-base font-extrabold text-gray-900">
+                  Seller Delivery Address
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPinPicker(true)}
+                className="text-xs font-extrabold text-[#56642B] bg-[#8A9A5B]/20 hover:bg-[#8A9A5B]/30 px-3 py-1.5 rounded-full transition-colors flex items-center space-x-1 cursor-pointer"
+              >
+                <MapPin size={13} />
+                <span>Pin Address on Map</span>
+              </button>
             </div>
+
+            {showPinPicker && (
+              <MapPinPicker
+                initialCoordinates={deliveryCoords}
+                onSelectCoordinates={(newCoords, addressText) => {
+                  setDeliveryCoords(newCoords);
+                  if (addressText) {
+                    const parts = addressText.split(",");
+                    setAddress((prev) => ({
+                      ...prev,
+                      street: parts[0] || prev.street,
+                      city: parts[1]?.trim() || prev.city,
+                    }));
+                  }
+                }}
+                onClose={() => setShowPinPicker(false)}
+                title="Select Delivery House Pin"
+              />
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Stripe Card */}
