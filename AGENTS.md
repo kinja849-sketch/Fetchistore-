@@ -118,6 +118,7 @@ Skills live under `.agents/skills/`. Use **only** these.
 
 | Skill path | Purpose |
 | --- | --- |
+| `.agents/skills/clerk` | Clerk Auth integration (@clerk/nextjs), middleware, user sessions, Supabase sync |
 | `.agents/skills/supabase` | Schema, RLS, Auth, Storage, PostGIS, Realtime, typed clients |
 | `.agents/skills/stripe` | Card payments, webhooks, signature verification |
 | `.agents/skills/geolocation` | Browser geolocation, PostGIS distance, live delivery location, maps |
@@ -523,6 +524,8 @@ The agent must not claim “no errors” without running checks or inspecting lo
 7. Implement.
 8. Run checks.
 9. Deliver exact test steps.
+10. **NEVER push anything to GitHub** (`git push`) unless the user explicitly reviews and approves it.
+11. **CodeRabbit & Code Verification:** Prior to finalizing or committing code, run CodeRabbit checks and static verification (`typecheck`, `lint`) to ensure zero issues.
 
 ---
 

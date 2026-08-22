@@ -1,6 +1,6 @@
 "use client";
 
-import { SignUpButton, SignInButton } from "@clerk/nextjs";
+import Link from "next/link";
 
 export default function UnauthenticatedWelcome() {
   return (
@@ -50,18 +50,20 @@ export default function UnauthenticatedWelcome() {
         </p>
 
         <div className="pt-2 flex flex-col items-center gap-3 w-full">
-          <SignUpButton mode="modal">
-            <button className="w-full max-w-xs bg-[#8A9A5B] text-[#161F00] font-bold py-3.5 px-6 rounded-full hover:bg-[#D9EAA3] transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-98">
-              <span>Get Started</span>
-              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-            </button>
-          </SignUpButton>
+          <Link
+            href="/sign-in"
+            className="w-full max-w-xs bg-[#8A9A5B] text-[#161F00] font-bold py-3.5 px-6 rounded-full hover:bg-[#D9EAA3] transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-98 text-center"
+          >
+            <span>Get Started</span>
+            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </Link>
 
-          <SignInButton mode="modal">
-            <button className="w-full max-w-xs text-[#46483C] font-semibold py-2.5 px-6 rounded-full hover:bg-[#F0EDED] transition-colors cursor-pointer text-sm">
-              Already have an account? Sign In
-            </button>
-          </SignInButton>
+          <Link
+            href="/sign-in"
+            className="w-full max-w-xs text-[#46483C] font-semibold py-2.5 px-6 rounded-full hover:bg-[#F0EDED] transition-colors cursor-pointer text-sm text-center"
+          >
+            Already have an account? Sign In
+          </Link>
         </div>
       </div>
     </div>

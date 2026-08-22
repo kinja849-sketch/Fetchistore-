@@ -6,8 +6,12 @@ import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useCart } from "@/lib/cart-context";
 
+import { useAuth } from "@/lib/supabase/auth-context";
+
 export function BottomNav() {
-  const { isLoaded } = useUser();
+  const { user: clerkUser, isLoaded } = useUser();
+  const { user: supabaseUser } = useAuth();
+  const isSignedIn = !!clerkUser || !!supabaseUser;
   const pathname = usePathname();
   const { totalItems } = useCart();
 
@@ -20,7 +24,7 @@ export function BottomNav() {
     pathname.startsWith("/orders") ||
     pathname.startsWith("/profile");
 
-  if (!isLoaded || !isMainScreen) {
+  if (!isLoaded || !isSignedIn || !isMainScreen) {
     return null;
   }
 
