@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { useUser, SignUpButton, SignInButton } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { ArrowRight } from "lucide-react";
 
 export default function HeroSection() {
@@ -69,18 +69,20 @@ export default function HeroSection() {
           <div className="w-full flex flex-col items-center md:items-start space-y-2 sm:space-y-3 pt-1 sm:pt-2">
             {!isSignedIn ? (
               <>
-                <SignUpButton mode="modal">
-                  <button className="w-full max-w-xs md:max-w-sm bg-[#8A9A5B] text-[#253000] font-bold text-xs sm:text-sm py-3.5 sm:py-4 px-6 sm:px-8 rounded-full hover:bg-[#D9EAA3] hover:-translate-y-0.5 hover:shadow-sm transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs">
-                    <span>Get Started</span>
-                    <ArrowRight size={16} />
-                  </button>
-                </SignUpButton>
+                <Link
+                  href="/sign-in"
+                  className="w-full max-w-xs md:max-w-sm bg-[#8A9A5B] text-[#253000] font-bold text-xs sm:text-sm py-3.5 sm:py-4 px-6 sm:px-8 rounded-full hover:bg-[#D9EAA3] hover:-translate-y-0.5 hover:shadow-sm transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs text-center"
+                >
+                  <span>Get Started</span>
+                  <ArrowRight size={16} />
+                </Link>
 
-                <SignInButton mode="modal">
-                  <button className="w-full max-w-xs md:max-w-sm text-[#46483C] font-semibold text-xs sm:text-sm py-2 px-6 sm:px-8 rounded-full hover:bg-[#F6F3F2] hover:text-[#56642B] transition-colors duration-200 cursor-pointer">
-                    Already have an account? Sign In
-                  </button>
-                </SignInButton>
+                <Link
+                  href="/sign-in"
+                  className="w-full max-w-xs md:max-w-sm text-[#46483C] font-semibold text-xs sm:text-sm py-2 px-6 sm:px-8 rounded-full hover:bg-[#F6F3F2] hover:text-[#56642B] transition-colors duration-200 cursor-pointer text-center"
+                >
+                  Already have an account? Sign In
+                </Link>
               </>
             ) : (
               <>

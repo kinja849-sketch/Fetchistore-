@@ -8,6 +8,7 @@ import { ListingsProvider } from "@/lib/listings-context";
 import { Navbar } from "@/components/shared/navbar";
 import { BottomNav } from "@/components/shared/bottom-nav";
 import { UserSync } from "@/components/shared/user-sync";
+import { AuthModal } from "@/components/auth/auth-modal";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -36,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
       <html lang="en" className={`${manrope.variable} h-full antialiased`}>
         <head>
           <link
@@ -46,6 +47,7 @@ export default function RootLayout({
         </head>
         <body className="min-h-full bg-[#FBF9F8] text-[#1B1C1C] font-sans antialiased flex flex-col overflow-x-hidden max-w-full">
           <AuthProvider>
+            <AuthModal />
             <UserSync />
             <ListingsProvider>
               <WishlistProvider>

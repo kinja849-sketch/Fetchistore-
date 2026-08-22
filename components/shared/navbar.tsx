@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useUser, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { useUser, UserButton } from "@clerk/nextjs";
 import { useCart } from "@/lib/cart-context";
 
+import { useAuth } from "@/lib/supabase/auth-context";
+
 export function Navbar() {
-  const { user } = useUser();
-  const isSignedIn = !!user;
+  const { user: clerkUser } = useUser();
+  const { user: supabaseUser } = useAuth();
+  const isSignedIn = !!clerkUser || !!supabaseUser;
   const pathname = usePathname();
   const router = useRouter();
   const { totalItems } = useCart();
@@ -44,7 +47,16 @@ export function Navbar() {
     return "Fetchistore";
   };
 
-  if (pathname.includes("/chat")) {
+  const isUnauthenticatedWelcome = (pathname === "/" || pathname === "") && !isSignedIn;
+  const isAuthOrOnboardingPage =
+    pathname.startsWith("/sign-in") ||
+    pathname.startsWith("/sign-up") ||
+    pathname.startsWith("/sso-callback") ||
+    pathname.startsWith("/onboarding") ||
+    pathname.includes("/chat") ||
+    isUnauthenticatedWelcome;
+
+  if (isAuthOrOnboardingPage) {
     return null;
   }
 
@@ -182,16 +194,18 @@ export function Navbar() {
           <UserButton />
         ) : (
           <div className="flex items-center gap-2">
-            <SignInButton mode="modal">
-              <button className="px-3.5 py-1.5 bg-[#8A9A5B] text-[#161F00] hover:bg-[#D9EAA3] text-xs font-bold rounded-full transition-colors cursor-pointer">
-                Sign In
-              </button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <button className="hidden sm:block px-3.5 py-1.5 border border-[#8A9A5B] text-[#56642B] hover:bg-[#F0EDED] text-xs font-bold rounded-full transition-colors cursor-pointer">
-                Sign Up
-              </button>
-            </SignUpButton>
+            <Link
+              href="/sign-in"
+              className="px-3.5 py-1.5 bg-[#8A9A5B] text-[#161F00] hover:bg-[#D9EAA3] text-xs font-bold rounded-full transition-colors cursor-pointer"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/sign-up"
+              className="hidden sm:block px-3.5 py-1.5 border border-[#8A9A5B] text-[#56642B] hover:bg-[#F0EDED] text-xs font-bold rounded-full transition-colors cursor-pointer"
+            >
+              Sign Up
+            </Link>
           </div>
         )}
       </div>

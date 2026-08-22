@@ -54,7 +54,7 @@ export default function AuthenticatedFeed() {
   const { addItem } = useCart();
   const { listings: contextListings } = useListings();
 
-  const handleAddToCartCard = (product: any, e: React.MouseEvent) => {
+  const handleAddToCartCard = (product: ListingItem, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addItem({
