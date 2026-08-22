@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { MessageSquare, ArrowLeft } from "lucide-react";
@@ -25,12 +25,14 @@ export default function OrderTrackingPage() {
   const [directionsInfo, setDirectionsInfo] = useState<DirectionsResult | null>(null);
 
   // Derive active seller position relative to buyer location
-  const sellerCoords: Coordinates | null = buyerCoords
-    ? {
-        lat: buyerCoords.lat + distanceKm * 0.007,
-        lng: buyerCoords.lng - distanceKm * 0.007,
-      }
-    : null;
+  const sellerCoords: Coordinates | null = useMemo(() => {
+    return buyerCoords
+      ? {
+          lat: buyerCoords.lat + distanceKm * 0.007,
+          lng: buyerCoords.lng - distanceKm * 0.007,
+        }
+      : null;
+  }, [buyerCoords, distanceKm]);
 
   useEffect(() => {
     if (sellerCoords && buyerCoords) {
