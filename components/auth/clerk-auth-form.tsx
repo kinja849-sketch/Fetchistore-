@@ -172,10 +172,10 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
   };
 
   return (
-    <div className={`w-full ${isModal ? "" : "min-h-screen bg-[#FFF9E9] flex flex-col items-center justify-center p-3 sm:p-5"}`}>
-      <div className={`w-full max-w-[400px] mx-auto bg-[#FFF9E9] ${isModal ? "p-0" : "px-2 py-1"}`}>
+    <div className={`w-full ${isModal ? "" : "h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col items-center justify-between p-2.5 sm:p-4 bg-[#FFF9E9]"}`}>
+      <div className={`w-full max-w-[380px] sm:max-w-[400px] mx-auto bg-[#FFF9E9] ${isModal ? "p-0" : "h-full flex flex-col justify-between py-1 px-1 overflow-hidden"}`}>
         {/* Clean 3D Character Illustration (No printed text or logo in image) */}
-        <div className="w-full relative h-[260px] sm:h-[290px] mb-1">
+        <div className="w-full relative h-[140px] xs:h-[160px] sm:h-[180px] shrink-1 mb-0.5">
           <Image
             src={mode === "signin" ? "/images/auth/sign-in-clean-illustration.jpg" : "/images/auth/sign-up-clean-illustration.jpg"}
             alt={mode === "signin" ? "Fetchistore Sign In Character Illustration" : "Fetchistore Sign Up Character Illustration"}
@@ -186,25 +186,16 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
         </div>
 
         {/* Brand Header */}
-        <div className="text-center mt-1 mb-5">
-          {/* Single Organic 2-Leaf Icon */}
-          <div className="flex items-center justify-center mb-0.5">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-[#56642B]">
-              <path d="M12 21V12" stroke="#56642B" strokeWidth="2" strokeLinecap="round" />
-              <path d="M12 12C9.5 12 7.5 9.5 7.5 6C11 6 12 8.5 12 12Z" fill="#56642B" />
-              <path d="M12 12C14.5 12 16.5 9.5 16.5 6C13 6 12 8.5 12 12Z" fill="#56642B" />
-            </svg>
-          </div>
-
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#56642B] tracking-tight font-serif">
+        <div className="text-center mt-0 mb-2">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#56642B] tracking-tight font-serif leading-none">
             Fetchistore
           </h2>
 
-          <h3 className="text-2xl sm:text-3xl font-extrabold text-[#2C302E] mt-1 tracking-tight">
+          <h3 className="text-xl sm:text-2xl font-extrabold text-[#2C302E] mt-1 tracking-tight">
             {mode === "signin" ? "Welcome Back" : "Create Your Account"}
           </h3>
 
-          <p className="text-xs sm:text-sm text-[#666B59] font-medium mt-1 px-2 leading-relaxed">
+          <p className="text-xs text-[#666B59] font-medium mt-0.5 px-2 leading-tight">
             {mode === "signin"
               ? "Sign in to continue your style journey."
               : "Join our community for exclusive style, early access and personal edits."}
@@ -212,15 +203,15 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
         </div>
 
         {errorMsg && (
-          <div className="mb-4 p-3 text-xs font-semibold text-[#ba1a1a] bg-red-50 border border-red-200 rounded-2xl text-center">
+          <div className="mb-2 p-2 text-xs font-semibold text-[#ba1a1a] bg-red-50 border border-red-200 rounded-xl text-center shrink-0">
             {errorMsg}
           </div>
         )}
 
         {/* Pending Email Code Verification View */}
         {pendingVerification ? (
-          <form onSubmit={handleVerifyCode} className="space-y-3.5">
-            <div className="text-center mb-2">
+          <form onSubmit={handleVerifyCode} className="space-y-2.5">
+            <div className="text-center mb-1">
               <p className="text-xs font-medium text-[#46483C]">
                 We sent a 6-digit verification code to <span className="font-bold text-[#1B1C1C]">{email}</span>
               </p>
@@ -232,40 +223,40 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value)}
                 placeholder="Enter 6-digit code"
-                className="w-full px-4 py-3 bg-white border border-[#E3DEC3] rounded-2xl text-center text-lg font-bold tracking-widest text-[#1B1C1C] focus:ring-2 focus:ring-[#56642B] focus:border-transparent outline-none transition-all shadow-xs"
+                className="w-full px-3.5 py-2.5 bg-white border border-[#E3DEC3] rounded-xl text-center text-base font-bold tracking-widest text-[#1B1C1C] focus:ring-2 focus:ring-[#56642B] focus:border-transparent outline-none transition-all shadow-xs"
               />
             </div>
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-[#56642B] hover:bg-[#465322] active:scale-[0.99] text-white font-bold text-sm rounded-2xl transition-all shadow-xs flex items-center justify-center space-x-2 disabled:opacity-50"
+              className="w-full py-2.5 bg-[#56642B] hover:bg-[#465322] active:scale-[0.99] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center space-x-2 disabled:opacity-50"
             >
-              {isLoading ? <Loader2 size={18} className="animate-spin" /> : <span>Verify & Complete</span>}
+              {isLoading ? <Loader2 size={16} className="animate-spin" /> : <span>Verify & Complete</span>}
             </button>
           </form>
         ) : (
           /* Standard Auth Form */
-          <form onSubmit={mode === "signin" ? handleSignIn : handleSignUp} className="space-y-3">
+          <form onSubmit={mode === "signin" ? handleSignIn : handleSignUp} className="space-y-2 sm:space-y-2.5">
             {/* Clerk Custom Flow Bot Protection CAPTCHA Mount Point */}
             <div id="clerk-captcha" className="hidden" />
 
             {/* Email Field */}
-            <div className="relative flex items-center bg-white border border-[#E3DEC3] rounded-2xl px-4 py-3 focus-within:ring-2 focus-within:ring-[#56642B] focus-within:border-transparent transition-all shadow-xs">
-              <Mail size={18} className="text-[#888D79] shrink-0 mr-3" />
+            <div className="relative flex items-center bg-white border border-[#E3DEC3] rounded-xl px-3.5 py-2.5 focus-within:ring-2 focus-within:ring-[#56642B] focus-within:border-transparent transition-all shadow-xs">
+              <Mail size={16} className="text-[#888D79] shrink-0 mr-2.5" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
-                className="w-full bg-transparent outline-none text-sm font-medium text-[#2C302E] placeholder-[#9CA3AF]"
+                className="w-full bg-transparent outline-none text-xs sm:text-sm font-medium text-[#2C302E] placeholder-[#9CA3AF]"
               />
             </div>
 
             {/* Password Field */}
             <div>
-              <div className="relative flex items-center bg-white border border-[#E3DEC3] rounded-2xl px-4 py-3 focus-within:ring-2 focus-within:ring-[#56642B] focus-within:border-transparent transition-all shadow-xs">
-                <Lock size={18} className="text-[#888D79] shrink-0 mr-3" />
+              <div className="relative flex items-center bg-white border border-[#E3DEC3] rounded-xl px-3.5 py-2.5 focus-within:ring-2 focus-within:ring-[#56642B] focus-within:border-transparent transition-all shadow-xs">
+                <Lock size={16} className="text-[#888D79] shrink-0 mr-2.5" />
                 <input
                   type={showPassword ? "text" : "password"}
                   required
@@ -273,28 +264,28 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
-                  className="w-full bg-transparent outline-none text-sm font-medium text-[#2C302E] placeholder-[#9CA3AF]"
+                  className="w-full bg-transparent outline-none text-xs sm:text-sm font-medium text-[#2C302E] placeholder-[#9CA3AF]"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-[#888D79] hover:text-[#2C302E] transition-colors ml-2 focus:outline-none"
+                  className="text-[#888D79] hover:text-[#2C302E] transition-colors ml-1.5 focus:outline-none"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
 
               {/* Forgot Password Link on Sign In */}
               {mode === "signin" && (
-                <div className="text-right mt-1.5">
+                <div className="text-right mt-1">
                   <Link
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
                       setErrorMsg("Password reset email feature: Please use Clerk dashboard or sign in with Google.");
                     }}
-                    className="text-xs font-medium text-[#666B59] hover:text-[#2C302E] transition-colors"
+                    className="text-[11px] font-medium text-[#666B59] hover:text-[#2C302E] transition-colors"
                   >
                     Forgot password?
                   </Link>
@@ -306,10 +297,10 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 mt-1 bg-[#56642B] hover:bg-[#465322] active:scale-[0.99] text-white font-bold text-sm sm:text-base rounded-2xl transition-all shadow-xs flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
+              className="w-full py-3 mt-0.5 bg-[#56642B] hover:bg-[#465322] active:scale-[0.99] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
             >
               {isLoading ? (
-                <Loader2 size={18} className="animate-spin" />
+                <Loader2 size={16} className="animate-spin" />
               ) : (
                 <span>{mode === "signin" ? "Sign In" : "Create Account"}</span>
               )}
@@ -318,11 +309,11 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
         )}
 
         {/* Divider */}
-        <div className="relative my-4 text-center">
+        <div className="relative my-2 sm:my-2.5 text-center">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-[#E3DEC3]" />
           </div>
-          <span className="relative bg-[#FFF9E9] px-3 text-xs font-medium text-[#666B59]">
+          <span className="relative bg-[#FFF9E9] px-2.5 text-[11px] font-medium text-[#666B59]">
             {mode === "signin" ? "or continue with" : "or"}
           </span>
         </div>
@@ -331,10 +322,10 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
         <button
           type="button"
           onClick={handleGoogleAuth}
-          className="w-full py-3 bg-white border border-[#E3DEC3] hover:bg-gray-50 active:scale-[0.99] text-[#2C302E] font-bold text-sm rounded-2xl transition-all shadow-xs flex items-center justify-center space-x-3 cursor-pointer"
+          className="w-full py-2.5 bg-white border border-[#E3DEC3] hover:bg-gray-50 active:scale-[0.99] text-[#2C302E] font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center space-x-2.5 cursor-pointer"
         >
           {/* Google Multicolor SVG */}
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
               fill="#4285F4"
@@ -356,7 +347,7 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
         </button>
 
         {/* Toggle Mode Footer Link */}
-        <div className="mt-5 text-center text-xs font-semibold text-[#666B59]">
+        <div className="mt-2 sm:mt-2.5 text-center text-xs font-semibold text-[#666B59]">
           {mode === "signin" ? (
             <p>
               Don’t have an account?{" "}
@@ -390,7 +381,7 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
 
         {/* Sign Up Terms Footer */}
         {mode === "signup" && (
-          <div className="mt-3.5 text-center text-xs font-semibold text-[#A65B32] space-x-1">
+          <div className="mt-1 sm:mt-1.5 text-center text-[11px] font-semibold text-[#A65B32] space-x-1">
             <a href="#" className="underline hover:text-[#2C302E]">
               Terms
             </a>

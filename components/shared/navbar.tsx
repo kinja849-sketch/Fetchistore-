@@ -9,11 +9,13 @@ import { useAuth } from "@/lib/supabase/auth-context";
 
 export function Navbar() {
   const { user: clerkUser } = useUser();
-  const { user: supabaseUser } = useAuth();
+  const { user: supabaseUser, userProfile } = useAuth();
   const isSignedIn = !!clerkUser || !!supabaseUser;
   const pathname = usePathname();
   const router = useRouter();
   const { totalItems } = useCart();
+
+  const isDiscoveryPage = pathname === "/";
 
   const isSubPage =
     pathname.startsWith("/product/") ||
@@ -56,6 +58,30 @@ export function Navbar() {
     pathname.includes("/chat") ||
     isUnauthenticatedWelcome;
 
+  const avatarPhoto = userProfile?.avatarUrl || clerkUser?.imageUrl;
+
+  const renderUserAvatar = () => {
+    if (avatarPhoto) {
+      return (
+        <Link href="/profile" className="flex items-center justify-center shrink-0" aria-label="Profile">
+          <img
+            src={avatarPhoto}
+            alt="Profile Avatar"
+            className="w-8 h-8 rounded-full object-cover ring-2 ring-[#8A9A5B]/40 hover:ring-[#56642B] transition-all shadow-xs"
+          />
+        </Link>
+      );
+    }
+    if (clerkUser) {
+      return <UserButton />;
+    }
+    return (
+      <Link href="/profile" className="flex items-center justify-center w-8 h-8 rounded-full bg-[#8A9A5B]/20 text-[#56642B] font-bold text-xs shrink-0" aria-label="Profile">
+        {userProfile?.fullName?.[0]?.toUpperCase() || <span className="material-symbols-outlined text-[18px]">person</span>}
+      </Link>
+    );
+  };
+
   if (isAuthOrOnboardingPage) {
     return null;
   }
@@ -76,19 +102,6 @@ export function Navbar() {
         </h1>
 
         <div className="flex items-center space-x-2 shrink-0">
-          <Link
-            href="/cart"
-            id="cart-fly-target-header"
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-[#F0EDED] text-[#1B1C1C] hover:bg-[#E4E2E1] transition-colors relative"
-            aria-label="Shopping Cart"
-          >
-            <span className="material-symbols-outlined text-[19px]">shopping_cart</span>
-            {totalItems > 0 && (
-              <span className="absolute -top-1 -right-1 text-[9px] font-bold w-4 h-4 bg-[#ba1a1a] text-white rounded-full flex items-center justify-center border border-white">
-                {totalItems}
-              </span>
-            )}
-          </Link>
           <Link
             href="/"
             className="flex items-center justify-center w-9 h-9 rounded-full bg-[#F0EDED] text-[#1B1C1C] hover:bg-[#E4E2E1] transition-colors shrink-0"
@@ -157,56 +170,60 @@ export function Navbar() {
       </div>
 
       <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
-        <div className="hidden sm:flex items-center gap-1 px-3 py-1 bg-[#F0EDED] rounded-full text-xs font-semibold text-[#46483C]">
-          <span className="material-symbols-outlined text-[14px] text-[#56642B]">
-            location_on
-          </span>
-          <span>Near You</span>
-        </div>
+        {isDiscoveryPage && (
+          <>
+            <div className="hidden sm:flex items-center gap-1 px-3 py-1 bg-[#F0EDED] rounded-full text-xs font-semibold text-[#46483C]">
+              <span className="material-symbols-outlined text-[14px] text-[#56642B]">
+                location_on
+              </span>
+              <span>Near You</span>
+            </div>
 
-        {/* Notifications Bell */}
-        <Link
-          href="/notifications"
-          className="flex items-center justify-center w-8 h-8 rounded-full bg-[#F0EDED] text-[#1B1C1C] hover:bg-[#E4E2E1] transition-colors relative"
-          aria-label="Notifications"
-        >
-          <span className="material-symbols-outlined text-[18px]">notifications</span>
-          <span className="absolute top-1 right-1 w-2 h-2 bg-[#ba1a1a] rounded-full"></span>
-        </Link>
-
-        {/* Shopping Cart Icon (Header Cart Target) */}
-        <Link
-          href="/cart"
-          id="cart-fly-target-header"
-          className="flex items-center justify-center w-8 h-8 rounded-full bg-[#F0EDED] text-[#1B1C1C] hover:bg-[#E4E2E1] transition-colors relative"
-          aria-label="Shopping Cart"
-        >
-          <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
-          {totalItems > 0 && (
-            <span className="absolute -top-1 -right-1 text-[9px] font-bold w-3.5 h-3.5 bg-[#ba1a1a] text-white rounded-full flex items-center justify-center border border-white">
-              {totalItems}
-            </span>
-          )}
-        </Link>
-
-        {/* User Avatar / Auth */}
-        {isSignedIn ? (
-          <UserButton />
-        ) : (
-          <div className="flex items-center gap-2">
+            {/* Notifications Bell */}
             <Link
-              href="/sign-in"
-              className="px-3.5 py-1.5 bg-[#8A9A5B] text-[#161F00] hover:bg-[#D9EAA3] text-xs font-bold rounded-full transition-colors cursor-pointer"
+              href="/notifications"
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-[#F0EDED] text-[#1B1C1C] hover:bg-[#E4E2E1] transition-colors relative"
+              aria-label="Notifications"
             >
-              Sign In
+              <span className="material-symbols-outlined text-[18px]">notifications</span>
+              <span className="absolute top-1 right-1 w-2 h-2 bg-[#ba1a1a] rounded-full"></span>
             </Link>
+
+            {/* Shopping Cart Icon (Header Cart Target) */}
             <Link
-              href="/sign-up"
-              className="hidden sm:block px-3.5 py-1.5 border border-[#8A9A5B] text-[#56642B] hover:bg-[#F0EDED] text-xs font-bold rounded-full transition-colors cursor-pointer"
+              href="/cart"
+              id="cart-fly-target-header"
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-[#F0EDED] text-[#1B1C1C] hover:bg-[#E4E2E1] transition-colors relative"
+              aria-label="Shopping Cart"
             >
-              Sign Up
+              <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 text-[9px] font-bold w-3.5 h-3.5 bg-[#ba1a1a] text-white rounded-full flex items-center justify-center border border-white">
+                  {totalItems}
+                </span>
+              )}
             </Link>
-          </div>
+
+            {/* User Avatar / Auth */}
+            {isSignedIn ? (
+              renderUserAvatar()
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/sign-in"
+                  className="px-3.5 py-1.5 bg-[#8A9A5B] text-[#161F00] hover:bg-[#D9EAA3] text-xs font-bold rounded-full transition-colors cursor-pointer"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/sign-up"
+                  className="hidden sm:block px-3.5 py-1.5 border border-[#8A9A5B] text-[#56642B] hover:bg-[#F0EDED] text-xs font-bold rounded-full transition-colors cursor-pointer"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+          </>
         )}
       </div>
     </header>
