@@ -46,6 +46,24 @@ export default function OrderTrackingPage() {
   const displayEtaText = directionsInfo?.durationText || etaInfo.text;
   const displayDistanceText = directionsInfo?.distanceText || `${distanceKm.toFixed(1)} km`;
 
+  const mapMarkers = useMemo(() => {
+    if (!buyerCoords || !sellerCoords) return [];
+    return [
+      {
+        id: "buyer-destination",
+        position: buyerCoords,
+        title: "Buyer Home Address",
+        type: "buyer" as const,
+      },
+      {
+        id: "seller-delivery-vehicle",
+        position: sellerCoords,
+        title: `Marcus (Seller) — ${displayDistanceText} away`,
+        type: "seller" as const,
+      },
+    ];
+  }, [buyerCoords, sellerCoords, displayDistanceText]);
+
   const [chatRole, setChatRole] = useState<"buyer" | "seller">("buyer");
   const [chatMessages, setChatMessages] = useState([
     { sender: "seller", text: `Hi ${buyerFirstName}! I've packed your items and I am currently heading to your home address.`, time: "2:14 PM" },
@@ -161,24 +179,7 @@ export default function OrderTrackingPage() {
               showRoute={true}
               interactive={true}
               onRetryLocation={refreshLocation}
-              markers={
-                buyerCoords && sellerCoords
-                  ? [
-                      {
-                        id: "buyer-destination",
-                        position: buyerCoords,
-                        title: "Buyer Home Address",
-                        type: "buyer",
-                      },
-                      {
-                        id: "seller-delivery-vehicle",
-                        position: sellerCoords,
-                        title: `Marcus (Seller) — ${displayDistanceText} away`,
-                        type: "seller",
-                      },
-                    ]
-                  : []
-              }
+              markers={mapMarkers}
             />
           </div>
 

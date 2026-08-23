@@ -80,42 +80,47 @@ body {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, 1fr);
-  gap: 12px;
-  height: 45vh;
-  min-height: 320px;
+  gap: 10px;
+  width: 100%;
 }
 .bento-item-1 {
   grid-column: 1 / 2;
-  grid-row: 1 / 3;
+  grid-row: 1 / 2;
 }
 .bento-item-2 {
   grid-column: 2 / 3;
   grid-row: 1 / 2;
 }
 .bento-item-3 {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+}
+.bento-item-4 {
   grid-column: 2 / 3;
   grid-row: 2 / 3;
 }
 
 @media (min-width: 768px) {
   .bento-grid {
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-    gap: 20px;
-    height: 52vh;
-    max-height: 480px;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: 1fr;
+    gap: 16px;
   }
   .bento-item-1 {
-    grid-column: 1 / 3;
-    grid-row: 1 / 3;
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
   }
   .bento-item-2 {
-    grid-column: 3 / 4;
+    grid-column: 2 / 3;
     grid-row: 1 / 2;
   }
   .bento-item-3 {
     grid-column: 3 / 4;
-    grid-row: 2 / 3;
+    grid-row: 1 / 2;
+  }
+  .bento-item-4 {
+    grid-column: 4 / 5;
+    grid-row: 1 / 2;
   }
 }
 
@@ -139,7 +144,11 @@ body {
 #netlify-drawer-button,
 #netlify-drawer-root,
 netlify-drawer,
-iframe#netlify-drawer-iframe {
+iframe#netlify-drawer-iframe,
+[class*="netlify"],
+[id*="netlify"],
+button[class*="netlify"],
+div[class*="netlify"] {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;

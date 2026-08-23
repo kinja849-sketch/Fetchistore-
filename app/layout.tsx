@@ -9,6 +9,7 @@ import { Navbar } from "@/components/shared/navbar";
 import { BottomNav } from "@/components/shared/bottom-nav";
 import { UserSync } from "@/components/shared/user-sync";
 import { AuthModal } from "@/components/auth/auth-modal";
+import { MainContent } from "@/components/shared/main-content";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -57,7 +58,7 @@ export default function RootLayout({
                     <div id="cart-fly-target-header" className="fixed top-3 right-12 w-8 h-8 pointer-events-none z-0 opacity-0" aria-hidden="true" />
 
                     <Navbar />
-                    <main className="flex-1 w-full flex flex-col pb-24 md:pb-8 min-w-0 overflow-x-hidden">{children}</main>
+                    <MainContent>{children}</MainContent>
                     <BottomNav />
                   </div>
                 </CartProvider>

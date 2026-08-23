@@ -143,6 +143,22 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
     }
   };
 
+  const handleResendCode = async () => {
+    setErrorMsg("");
+    setIsLoading(true);
+    try {
+      if (clerk?.loaded && clerk?.client?.signUp) {
+        await clerk.client.signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+        setErrorMsg("A new 6-digit verification code has been sent to your email.");
+      }
+    } catch (err: unknown) {
+      const error = err as { errors?: Array<{ message: string }>; message?: string };
+      setErrorMsg(error.errors?.[0]?.message || error.message || "Failed to resend verification code.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGoogleAuth = async () => {
     setErrorMsg("");
     try {
@@ -172,10 +188,10 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
   };
 
   return (
-    <div className={`w-full ${isModal ? "" : "min-h-screen bg-[#FFF9E9] flex flex-col items-center justify-center p-3 sm:p-5"}`}>
-      <div className={`w-full max-w-[400px] mx-auto bg-[#FFF9E9] ${isModal ? "p-0" : "px-2 py-1"}`}>
-        {/* Clean 3D Character Illustration (No printed text or logo in image) */}
-        <div className="w-full relative h-[260px] sm:h-[290px] mb-1">
+    <div className={`w-full ${isModal ? "" : "min-h-screen bg-[#FFF9E9] flex flex-col items-center justify-center p-4 sm:p-6 py-6 sm:py-8"}`}>
+      <div className={`w-full max-w-[380px] sm:max-w-[400px] mx-auto bg-[#FFF9E9] ${isModal ? "p-0" : "flex flex-col items-center"}`}>
+        {/* Clean 3D Character Illustration (Natural Proportions) */}
+        <div className="w-full relative h-[210px] xs:h-[230px] sm:h-[250px] mb-3 shrink-0">
           <Image
             src={mode === "signin" ? "/images/auth/sign-in-clean-illustration.jpg" : "/images/auth/sign-up-clean-illustration.jpg"}
             alt={mode === "signin" ? "Fetchistore Sign In Character Illustration" : "Fetchistore Sign Up Character Illustration"}
@@ -186,25 +202,16 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
         </div>
 
         {/* Brand Header */}
-        <div className="text-center mt-1 mb-5">
-          {/* Single Organic 2-Leaf Icon */}
-          <div className="flex items-center justify-center mb-0.5">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-[#56642B]">
-              <path d="M12 21V12" stroke="#56642B" strokeWidth="2" strokeLinecap="round" />
-              <path d="M12 12C9.5 12 7.5 9.5 7.5 6C11 6 12 8.5 12 12Z" fill="#56642B" />
-              <path d="M12 12C14.5 12 16.5 9.5 16.5 6C13 6 12 8.5 12 12Z" fill="#56642B" />
-            </svg>
-          </div>
-
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#56642B] tracking-tight font-serif">
+        <div className="text-center mt-0 mb-3 w-full">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#56642B] tracking-tight font-serif leading-none">
             Fetchistore
           </h2>
 
-          <h3 className="text-2xl sm:text-3xl font-extrabold text-[#2C302E] mt-1 tracking-tight">
+          <h3 className="text-2xl sm:text-3xl font-extrabold text-[#2C302E] mt-1.5 tracking-tight font-sans">
             {mode === "signin" ? "Welcome Back" : "Create Your Account"}
           </h3>
 
-          <p className="text-xs sm:text-sm text-[#666B59] font-medium mt-1 px-2 leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#666B59] font-medium mt-1 px-2 leading-relaxed font-sans">
             {mode === "signin"
               ? "Sign in to continue your style journey."
               : "Join our community for exclusive style, early access and personal edits."}
@@ -212,15 +219,15 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
         </div>
 
         {errorMsg && (
-          <div className="mb-4 p-3 text-xs font-semibold text-[#ba1a1a] bg-red-50 border border-red-200 rounded-2xl text-center">
+          <div className="w-full mb-3 p-3 text-xs font-semibold text-[#ba1a1a] bg-red-50 border border-red-200 rounded-2xl text-center shrink-0">
             {errorMsg}
           </div>
         )}
 
         {/* Pending Email Code Verification View */}
         {pendingVerification ? (
-          <form onSubmit={handleVerifyCode} className="space-y-3.5">
-            <div className="text-center mb-2">
+          <form onSubmit={handleVerifyCode} className="w-full space-y-3">
+            <div className="text-center mb-1">
               <p className="text-xs font-medium text-[#46483C]">
                 We sent a 6-digit verification code to <span className="font-bold text-[#1B1C1C]">{email}</span>
               </p>
@@ -232,20 +239,40 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value)}
                 placeholder="Enter 6-digit code"
-                className="w-full px-4 py-3 bg-white border border-[#E3DEC3] rounded-2xl text-center text-lg font-bold tracking-widest text-[#1B1C1C] focus:ring-2 focus:ring-[#56642B] focus:border-transparent outline-none transition-all shadow-xs"
+                className="w-full px-4 py-3 bg-white border border-[#E3DEC3] rounded-2xl text-center text-base font-bold tracking-widest text-[#1B1C1C] focus:ring-2 focus:ring-[#56642B] focus:border-transparent outline-none transition-all shadow-xs"
               />
             </div>
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-[#56642B] hover:bg-[#465322] active:scale-[0.99] text-white font-bold text-sm rounded-2xl transition-all shadow-xs flex items-center justify-center space-x-2 disabled:opacity-50"
+              className="w-full py-3.5 bg-[#56642B] hover:bg-[#465322] active:scale-[0.99] text-white font-bold text-sm sm:text-base rounded-2xl transition-all shadow-xs flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
             >
               {isLoading ? <Loader2 size={18} className="animate-spin" /> : <span>Verify & Complete</span>}
             </button>
+            <div className="flex items-center justify-between text-xs font-semibold text-[#666B59] pt-1">
+              <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={isLoading}
+                className="hover:text-[#2C302E] underline cursor-pointer"
+              >
+                Resend Code
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPendingVerification(false);
+                  setVerificationCode("");
+                }}
+                className="hover:text-[#2C302E] underline cursor-pointer"
+              >
+                Use another email
+              </button>
+            </div>
           </form>
         ) : (
           /* Standard Auth Form */
-          <form onSubmit={mode === "signin" ? handleSignIn : handleSignUp} className="space-y-3">
+          <form onSubmit={mode === "signin" ? handleSignIn : handleSignUp} className="w-full space-y-3 sm:space-y-3.5">
             {/* Clerk Custom Flow Bot Protection CAPTCHA Mount Point */}
             <div id="clerk-captcha" className="hidden" />
 
@@ -258,7 +285,7 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
-                className="w-full bg-transparent outline-none text-sm font-medium text-[#2C302E] placeholder-[#9CA3AF]"
+                className="w-full bg-transparent outline-none text-xs sm:text-sm font-medium text-[#2C302E] placeholder-[#9CA3AF]"
               />
             </div>
 
@@ -273,12 +300,12 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
-                  className="w-full bg-transparent outline-none text-sm font-medium text-[#2C302E] placeholder-[#9CA3AF]"
+                  className="w-full bg-transparent outline-none text-xs sm:text-sm font-medium text-[#2C302E] placeholder-[#9CA3AF]"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-[#888D79] hover:text-[#2C302E] transition-colors ml-2 focus:outline-none"
+                  className="text-[#888D79] hover:text-[#2C302E] transition-colors ml-2 focus:outline-none cursor-pointer"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -318,7 +345,7 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
         )}
 
         {/* Divider */}
-        <div className="relative my-4 text-center">
+        <div className="relative w-full my-4 sm:my-5 text-center">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-[#E3DEC3]" />
           </div>
@@ -331,7 +358,7 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
         <button
           type="button"
           onClick={handleGoogleAuth}
-          className="w-full py-3 bg-white border border-[#E3DEC3] hover:bg-gray-50 active:scale-[0.99] text-[#2C302E] font-bold text-sm rounded-2xl transition-all shadow-xs flex items-center justify-center space-x-3 cursor-pointer"
+          className="w-full py-3 bg-white border border-[#E3DEC3] hover:bg-gray-50 active:scale-[0.99] text-[#2C302E] font-bold text-xs sm:text-sm rounded-2xl transition-all shadow-xs flex items-center justify-center space-x-3 cursor-pointer"
         >
           {/* Google Multicolor SVG */}
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -356,7 +383,7 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
         </button>
 
         {/* Toggle Mode Footer Link */}
-        <div className="mt-5 text-center text-xs font-semibold text-[#666B59]">
+        <div className="mt-4 sm:mt-5 text-center text-xs sm:text-sm font-semibold text-[#666B59] w-full">
           {mode === "signin" ? (
             <p>
               Don’t have an account?{" "}
@@ -390,7 +417,7 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
 
         {/* Sign Up Terms Footer */}
         {mode === "signup" && (
-          <div className="mt-3.5 text-center text-xs font-semibold text-[#A65B32] space-x-1">
+          <div className="mt-2 text-center text-xs font-semibold text-[#A65B32] space-x-1.5 w-full">
             <a href="#" className="underline hover:text-[#2C302E]">
               Terms
             </a>
