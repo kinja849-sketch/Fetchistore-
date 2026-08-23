@@ -67,7 +67,7 @@ export default function UnauthenticatedWelcome() {
 
         <div className="pt-1 flex flex-col items-center gap-2 w-full">
           <Link
-            href="/sign-in"
+            href="/sign-up"
             className="w-full max-w-xs bg-[#8A9A5B] text-[#161F00] font-bold py-3 px-6 rounded-full hover:bg-[#D9EAA3] transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer active:scale-98 text-center text-sm"
           >
             <span>Get Started</span>

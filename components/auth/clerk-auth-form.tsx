@@ -143,6 +143,22 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
     }
   };
 
+  const handleResendCode = async () => {
+    setErrorMsg("");
+    setIsLoading(true);
+    try {
+      if (clerk?.loaded && clerk?.client?.signUp) {
+        await clerk.client.signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+        setErrorMsg("A new 6-digit verification code has been sent to your email.");
+      }
+    } catch (err: unknown) {
+      const error = err as { errors?: Array<{ message: string }>; message?: string };
+      setErrorMsg(error.errors?.[0]?.message || error.message || "Failed to resend verification code.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGoogleAuth = async () => {
     setErrorMsg("");
     try {
@@ -187,11 +203,11 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
 
         {/* Brand Header */}
         <div className="text-center mt-0 mb-2">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#56642B] tracking-tight font-serif leading-none">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#56642B] tracking-tight font-sans leading-none">
             Fetchistore
           </h2>
 
-          <h3 className="text-xl sm:text-2xl font-extrabold text-[#2C302E] mt-1 tracking-tight">
+          <h3 className="text-xl sm:text-2xl font-bold text-[#2C302E] mt-1 tracking-tight font-sans">
             {mode === "signin" ? "Welcome Back" : "Create Your Account"}
           </h3>
 
@@ -229,10 +245,30 @@ export function ClerkAuthForm({ initialMode = "signin", onSuccess, isModal = fal
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2.5 bg-[#56642B] hover:bg-[#465322] active:scale-[0.99] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center space-x-2 disabled:opacity-50"
+              className="w-full py-2.5 bg-[#56642B] hover:bg-[#465322] active:scale-[0.99] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
             >
               {isLoading ? <Loader2 size={16} className="animate-spin" /> : <span>Verify & Complete</span>}
             </button>
+            <div className="flex items-center justify-between text-[11px] font-semibold text-[#666B59] pt-1">
+              <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={isLoading}
+                className="hover:text-[#2C302E] underline cursor-pointer"
+              >
+                Resend Code
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPendingVerification(false);
+                  setVerificationCode("");
+                }}
+                className="hover:text-[#2C302E] underline cursor-pointer"
+              >
+                Use another email
+              </button>
+            </div>
           </form>
         ) : (
           /* Standard Auth Form */

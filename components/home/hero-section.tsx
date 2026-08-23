@@ -70,7 +70,7 @@ export default function HeroSection() {
             {!isSignedIn ? (
               <>
                 <Link
-                  href="/sign-in"
+                  href="/sign-up"
                   className="w-full max-w-xs md:max-w-sm bg-[#8A9A5B] text-[#253000] font-bold text-xs sm:text-sm py-3.5 sm:py-4 px-6 sm:px-8 rounded-full hover:bg-[#D9EAA3] hover:-translate-y-0.5 hover:shadow-sm transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-xs text-center"
                 >
                   <span>Get Started</span>
